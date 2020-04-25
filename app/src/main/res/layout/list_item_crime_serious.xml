@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/list_item_crime_id"
+	android:layout_width="match_parent"
+	android:layout_height="wrap_content"
+	android:orientation="horizontal"
+	android:padding="8dp"
+	tools:context=".crime_list.CrimeListActivity">
+	
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentStart="true"
+		android:layout_centerVertical="true"
+		android:layout_marginEnd="8dp"
+		android:layout_toStartOf="@+id/call_police_button_id"
+		android:orientation="vertical">
+		
+		<TextView
+			android:id="@+id/crime_title_id"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="4dp"
+			android:text="Crime Title" />
+		
+		<TextView
+			android:id="@+id/crime_date_id"
+			android:layout_width="match_parent"
+			android:layout_height="wrap_content"
+			android:padding="4dp"
+			android:text="Crime Date" />
+		
+	</LinearLayout>
+	
+	<Button
+		android:id="@+id/call_police_button_id"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_alignParentEnd="true"
+		android:layout_centerVertical="true"
+		android:text="@string/call_police_button_text"
+		android:textAlignment="center"
+		/>
+</RelativeLayout>
