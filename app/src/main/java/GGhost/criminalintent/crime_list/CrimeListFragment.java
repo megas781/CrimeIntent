@@ -1,11 +1,15 @@
 package GGhost.criminalintent.crime_list;
 
+import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -15,22 +19,45 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.List;
+import java.util.Locale;
 
 import GGhost.criminalintent.R;
+import GGhost.criminalintent.crime_detail.CrimeActivity;
 import GGhost.criminalintent.model.Crime;
 import GGhost.criminalintent.model.CrimeLab;
 
+/**
+ * Фрагмент сцены CrimeList, по сути реализующий весь интерфейс с RecyclerView
+ */
 public class CrimeListFragment extends Fragment {
 
+    private static final int CRIME_DETAIL_REQUEST_CODE = 1;
 
+    //Экземпляр RecyclerView
     private RecyclerView mCrimeRecyclerView;
 
+    /**
+     * В onCreate фрагмент обычно fetch'ит данные модели. Установка данных в представления
+     * производится в другом методе (onCreateView)
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
     }
 
+
+    /**
+     * Здесь происходит присваивание значений представлениям фрагмента. На момент исполнения метода
+     * Представления уже инициализированы и готовы к использованию (в отличие от onCreate)
+     * @param inflater
+     * @param container
+     * @param savedInstanceState
+     * @return
+     */
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
@@ -44,12 +71,42 @@ public class CrimeListFragment extends Fragment {
         /* Абсолютно любой RecyclerView нуждается в LayoutManager'e. Имеено LayoutManager отвечает
         * за позиционирование ячеек и когда их переиспользовать. Можно создавать кастомные LayoutManager'ы
         * но чаще хватает использовния заготовленных LinearLayoutManager и GridLayoutManager */
-        mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        /*
+        И конечно же RecyclerView нуждается в поставщике данных или адаптере,
+        как это называется в Андроид-программировании.
+         */
         mCrimeRecyclerView.setAdapter(new CrimeAdapter(CrimeLab.get(getActivity()).getCrimeList()));
         return v;
     }
 
+    /**
+     * Метод для сбора данных с дочерних активностей
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        switch (requestCode) {
+            case CRIME_DETAIL_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    /*Здесь должен быть вызван статический метод класса CrimeActivity, достающий из
+                    интента data нужные данные */
+                    int updateIndex = CrimeActivity.getPickedCrimeIndexFromIndent(data);
+                    if (updateIndex >= 0) {
+                        mCrimeRecyclerView.getAdapter().notifyItemChanged(updateIndex);
+                    }
+                }
+            default:
+                break;
+        }
+    }
+
+    /** Класс ячейки преступления. Внутри Holder'a имеется свойство itemView. Т.е. по сути ViewHolder
+     * может обладать своей собственной логикой. Например, устанавливать внутри себя прослушивание event'ов и т.д.*/
     public class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         protected Crime mCrime;
@@ -57,11 +114,14 @@ public class CrimeListFragment extends Fragment {
         protected TextView mTitleTextView;
         protected TextView mDateTextView;
 
+        @Nullable private ImageView mCrimeSolvedImageView;
+
         public CrimeHolder(@NonNull View itemView) {
             super(itemView);
 
             mTitleTextView = itemView.findViewById(R.id.crime_title_id);
             mDateTextView = itemView.findViewById(R.id.crime_date_id);
+            mCrimeSolvedImageView = itemView.findViewById(R.id.crime_solved_image_view_id);
 
             //Добавляем действие по нажатии
             itemView.setOnClickListener(this);
@@ -70,7 +130,15 @@ public class CrimeListFragment extends Fragment {
         public void bind(Crime crime) {
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
-            mDateTextView.setText(mCrime.getDate().toString());
+
+//            new SimpleDateFormat().for
+            SimpleDateFormat sdf = new SimpleDateFormat("dd MMMM YYYY, HH:mm", new Locale("ru"));
+            mDateTextView.setText(sdf.format(mCrime.getDate()));
+
+            //Этого элемента может не быть, если слишком серьезнное преступление
+            if (mCrimeSolvedImageView != null) {
+                mCrimeSolvedImageView.setVisibility(mCrime.isSolved() ? View.VISIBLE : View.INVISIBLE);
+            }
         }
 
         /**
@@ -79,11 +147,13 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            Toast t = Toast.makeText(getActivity(), "Вы нажали на " + this.mCrime.getTitle(), Toast.LENGTH_SHORT);
-            t.setGravity(Gravity.BOTTOM,0,20 * (int) getResources().getDisplayMetrics().density);
-            t.show();
+//            System.out.println("AdapterPos: " + getAdapterPosition() + "; LayoutPos: " + getLayoutPosition());
+            Intent i = CrimeActivity.createIntentForCrimeListActivity(getActivity(), mCrime.getId(), getAdapterPosition());
+            startActivityForResult(i,CRIME_DETAIL_REQUEST_CODE);
         }
     }
+
+    /** Более серьёзное предступление, ячейка которого имеет кнопку "Вызвать полицию" */
     public class SeriousCrimeHolder extends CrimeHolder {
 
         protected Button mCallPoliceButton;
@@ -103,11 +173,16 @@ public class CrimeListFragment extends Fragment {
             }
         };
     }
+
+    /** Адаптер таблицы. Создает ячейки, выбирает, для кого какой макет использовать и т.д.*/
     private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
 
-        private int k = 0;
         private List<Crime> mCrimeList;
 
+        /**
+         * Кастомный конструктор CrimeAdapter'a принимает на вход список преступлений
+         * @param crimeList
+         */
         public CrimeAdapter(List<Crime> crimeList) {
             mCrimeList = crimeList;
         }
@@ -130,10 +205,10 @@ public class CrimeListFragment extends Fragment {
 
             //Если тип 0 (т.е. обычный), то создаем, как обычно
             if (viewType == 0) {
-                System.out.println("onCreateViewHolder " + (++k));
                 View v = layoutInflater.inflate(R.layout.list_item_crime, parent, false);
                 return new CrimeHolder(v);
             } else {
+                //Если преступление серьёзное (т.е. viewType == 1), то инициализируем SeriousCrimeHolder
                 View v = layoutInflater.inflate(R.layout.list_item_crime_serious, parent, false);
                 return new SeriousCrimeHolder(v);
             }
@@ -146,14 +221,42 @@ public class CrimeListFragment extends Fragment {
             holder.bind(crime);
         }
 
+        //Определяет количество ячеек
         @Override
         public int getItemCount() {
             return mCrimeList.size();
         }
 
+        //Метод, определяющий, какого типа является конкретная ячейка
         @Override
         public int getItemViewType(int position) {
             return mCrimeList.get(position).isRequiresPolice() ? 1 : 0;
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+//        this.updateUI();
+    }
+
+    //Самописный метод для обновления UI
+    private void updateUI() {
+
+        //Чтобы обновить UI заново достаем список преступлений
+        List<Crime> crimeList = CrimeLab.get(getActivity()).getCrimeList();
+
+        //Если адаптера еще нет (что наврядли, потому что он инициализируется в onCreateView),  то устанавливаем
+        //Новый адаптер
+        if (mCrimeRecyclerView.getAdapter() == null) {
+            mCrimeRecyclerView.setAdapter(new CrimeAdapter(crimeList));
+        } else {
+            //В случае наличия адаптера (что скорее всего) просто уведомляем о том, что нужно перезагрудить ячейки
+            mCrimeRecyclerView.getAdapter().notifyDataSetChanged();
+//            mCrimeRecyclerView.getAdapter().notifi
+            //На самом деле лучше испльзовать .notifyItemChanged для выборочного обновления. Но в книге
+            //пока что говорят сделать через общее обновление ячеек
+        }
+    }
+
 }

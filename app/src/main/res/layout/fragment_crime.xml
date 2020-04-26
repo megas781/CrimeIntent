@@ -11,12 +11,12 @@
 		android:layout_height="wrap_content"
 		android:text="@string/crime_title_label"/>
 	<EditText
-		style="?android:listSeparatorTextViewStyle"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:hint="@string/crime_titile_hint"
+		android:hint="@string/crime_title_hint"
 		android:id="@+id/crime_title_edit_view_id"
 		/>
+	
 	<TextView
 		style="?android:listSeparatorTextViewStyle"
 		android:layout_width="match_parent"
