@@ -26,6 +26,7 @@ import java.util.Locale;
 
 import GGhost.criminalintent.R;
 import GGhost.criminalintent.crime_detail.CrimeActivity;
+import GGhost.criminalintent.crime_detail.CrimePagerActivity;
 import GGhost.criminalintent.model.Crime;
 import GGhost.criminalintent.model.CrimeLab;
 
@@ -93,12 +94,15 @@ public class CrimeListFragment extends Fragment {
         switch (requestCode) {
             case CRIME_DETAIL_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
+
+                    mCrimeRecyclerView.getAdapter().notifyDataSetChanged();
+
                     /*Здесь должен быть вызван статический метод класса CrimeActivity, достающий из
                     интента data нужные данные */
-                    int updateIndex = CrimeActivity.getPickedCrimeIndexFromIndent(data);
-                    if (updateIndex >= 0) {
-                        mCrimeRecyclerView.getAdapter().notifyItemChanged(updateIndex);
-                    }
+//                    int updateIndex = CrimeActivity.getPickedCrimeIndexFromIndent(data);
+//                    if (updateIndex >= 0) {
+//                        mCrimeRecyclerView.getAdapter().notifyItemChanged(updateIndex);
+//                    }
                 }
             default:
                 break;
@@ -148,7 +152,7 @@ public class CrimeListFragment extends Fragment {
         @Override
         public void onClick(View v) {
 //            System.out.println("AdapterPos: " + getAdapterPosition() + "; LayoutPos: " + getLayoutPosition());
-            Intent i = CrimeActivity.createIntentForCrimeListActivity(getActivity(), mCrime.getId(), getAdapterPosition());
+            Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), mCrime.getId(), getAdapterPosition());
             startActivityForResult(i,CRIME_DETAIL_REQUEST_CODE);
         }
     }

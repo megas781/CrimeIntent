@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res-auto"
+	android:id="@+id/view_pager_constraint_container_id"
+	android:layout_width="match_parent"
+	android:layout_height="match_parent">
+	
+	
+	<Button
+		android:id="@+id/crime_view_pager_to_beginning_button_id"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/to_beginning_button_label"
+		android:onClick="onJumpToEdgeButtonClick"
+		android:layout_margin="16dp"
+		app:layout_constraintBottom_toBottomOf="@+id/view_pager_constraint_container_id"
+		app:layout_constraintLeft_toLeftOf="@+id/view_pager_constraint_container_id" />
+	<Button
+		android:id="@+id/crime_view_pager_to_end_button_id"
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:text="@string/to_end_button_label"
+		android:onClick="onJumpToEdgeButtonClick"
+		 android:layout_margin="16dp"
+		app:layout_constraintBottom_toBottomOf="@+id/view_pager_constraint_container_id"
+		app:layout_constraintRight_toRightOf="@+id/view_pager_constraint_container_id" />
+	
+	<androidx.viewpager2.widget.ViewPager2
+		android:id="@+id/crime_view_pager_id"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent">
+	
+	</androidx.viewpager2.widget.ViewPager2>
+</androidx.constraintlayout.widget.ConstraintLayout>

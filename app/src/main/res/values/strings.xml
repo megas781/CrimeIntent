@@ -11,4 +11,8 @@
 	
 	<string name="call_police_button_text">Вызвать \n Полицию</string>
 	<string name="you_called_police_alert">Вы вызвали полицию! Будем через %d минут</string>
+	
+	<string name="to_beginning_button_label">В начало</string>
+	<string name="to_end_button_label">В конец</string>
+	
 </resources>
