@@ -150,14 +150,16 @@ public class CrimeFragment extends Fragment {
         @Override
         public void onClick(View v) {
 
-            FragmentManager fm = getFragmentManager();
-            DatePickerFragment datePicker = DatePickerFragment.newInstance(mCrime.getDate());
+            startActivityForResult(DatePickerActivity.createIntent(getActivity(), mCrime.getDate()), DATE_PICKER_FRAGMENT_REQUEST_CODE);
 
-            //datePicker устанавлевает целевой фрагмент, которому будет отдавать данные
-            datePicker.setTargetFragment(CrimeFragment.this, DATE_PICKER_FRAGMENT_REQUEST_CODE);
-            /*datePicker просит дать ему контакты  fragmentManager'a, шоб с ним договориться, чтоб
-             * он его показал. DatePicker представился как DATE_PICKER_FRAGMENT_TAG */
-            datePicker.show(fm, DATE_PICKER_FRAGMENT_TAG);
+//            FragmentManager fm = getFragmentManager();
+//            DatePickerFragment datePicker = DatePickerFragment.newInstance(mCrime.getDate());
+//
+//            //datePicker устанавлевает целевой фрагмент, которому будет отдавать данные
+//            datePicker.setTargetFragment(CrimeFragment.this, DATE_PICKER_FRAGMENT_REQUEST_CODE);
+//            /*datePicker просит дать ему контакты  fragmentManager'a, шоб с ним договориться, чтоб
+//             * он его показал. DatePicker представился как DATE_PICKER_FRAGMENT_TAG */
+//            datePicker.show(fm, DATE_PICKER_FRAGMENT_TAG);
         }
     };
     private final View.OnClickListener onTimeButtonClickListener = new View.OnClickListener() {

@@ -1,15 +1,12 @@
 package GGhost.criminalintent.crime_detail;
 
 import android.app.Activity;
-import android.app.AlertDialog;
-import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.DatePicker;
 
 import androidx.annotation.NonNull;
@@ -18,33 +15,28 @@ import androidx.fragment.app.DialogFragment;
 
 import java.util.Calendar;
 import java.util.Date;
-import java.util.GregorianCalendar;
 
 import GGhost.criminalintent.R;
 
-import static android.content.ContentValues.TAG;
-
 public class DatePickerFragment extends DialogFragment {
 
+    /** Константа дублирует ту, что в активности. Я нашёл в этом смысл.
+     * Активности нужна константа даты для того, чтобы создавать интенты для других активностей.
+     * Этому фрагменту нужна константа, чтобы устанавливать Result для активности, чтобы она могла
+     * принимать дату и передавать
+     * */
     private static final String CRIME_DATE_KEY = "CRIME_DATE_KEY";
 
     private DatePicker mCrimeDatePicker;
+    private Button mOkButton;
 
-    /**
-     * Метод, определяющий инициализацию создаваемого модального окна.
-     *
-     * @param savedInstanceState
-     * @return
-     */
-    @NonNull
+    @Nullable
     @Override
-    public Dialog onCreateDialog(@Nullable Bundle savedInstanceState) {
-
-        /* Не знаю, почему, но вся логика, которая раньше производилась в onCreateView, в DialogFragment'е
-         * перетекла в onCreateDialog. */
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         /* Сначала достаем значения аргументов (в данном случае только один: дата преступления) */
         /* Сам по себе класс Date это не более чем временная метка. У него нет никаких полезных методов.
          * Экземпляр Date не выдать значение года или дня месяца и т.д. Всем этим занимается объект Calendar */
+
         final Date date = (Date) getArguments().getSerializable(CRIME_DATE_KEY);
         /* Видимо, Calendar выполнен в Android синглтоном. Хотя никто не мешает создать свой календарь. */
         Calendar c = Calendar.getInstance();
@@ -57,34 +49,43 @@ public class DatePickerFragment extends DialogFragment {
         int day = c.get(Calendar.DAY_OF_MONTH);
 
 
-        View v = LayoutInflater.from(getActivity()).inflate(R.layout.dialog_date, null);
+        View v = inflater.inflate(R.layout.dialog_date, null);
 
-        mCrimeDatePicker = v.findViewById(R.id.dialog_date_picker);
+        mCrimeDatePicker = v.findViewById(R.id.dialog_date_picker_id);
         mCrimeDatePicker.init(year, month, day, mOnCrimeDateChangeListener);
 
-        return new AlertDialog.Builder(getActivity())
-                .setView(v)
-                .setTitle(R.string.date_of_crime_label)
-                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        int year = mCrimeDatePicker.getYear();
-                        int month = mCrimeDatePicker.getMonth();
-                        int day = mCrimeDatePicker.getDayOfMonth();
-                        /* Java убрала все полезные методы класса Data и перенесла их в календари.
-                        Почему здесь мы используем GregorianCalendar, а не
-                        */
-                        Calendar c = Calendar.getInstance();
-                        //Устанавливаем изначально дату, которую приняли, чтобы сохранить время
-                        c.setTime(date);
-                        //Изменяем день-месяц-год
-                        c.set(year, month, day);
-                        //Достаем новоиспченную дату из календаря
-                        DatePickerFragment.this.sendResult(Activity.RESULT_OK, c.getTime());
-                    }
-                })
-                .create();
+        mOkButton = v.findViewById(R.id.dialog_date_picker_ok_button_id);
+        mOkButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /* Java убрала все полезные методы класса Data и перенесла их в календари.
+                Почему здесь мы используем GregorianCalendar, а не
+                */
+                Calendar c = Calendar.getInstance();
+
+                int year = mCrimeDatePicker.getYear();
+                int month = mCrimeDatePicker.getMonth();
+                int day = mCrimeDatePicker.getDayOfMonth();
+
+                //Устанавливаем изначально дату, которую приняли, чтобы сохранить время
+                c.setTime(date);
+                //Изменяем день-месяц-год
+                c.set(year, month, day);
+
+                DatePickerFragment.this.setResult(Activity.RESULT_OK, c.getTime());
+                DatePickerFragment.this.dismiss();
+            }
+        });
+
+        return v;
     }
+
+    /**
+     * Метод, определяющий инициализацию создаваемого модального окна.
+     *
+     * @param savedInstanceState
+     * @return
+     */
 
 
     //Слушатель изменений в  mCrimeDatePicker'e
@@ -110,17 +111,14 @@ public class DatePickerFragment extends DialogFragment {
     /**
      * Метод отправляет данные родительскому фрагменту по средствам непосредственного обращения к нему
      * через метод getTargetFragment() и getTargetRequestCode()
+     *
      * @param resultCode
      * @param date
      */
-    private void sendResult(int resultCode, Date date) {
+    private void setResult(int resultCode, Date date) {
         Intent i = new Intent();
         i.putExtra(CRIME_DATE_KEY, date);
-        try {
-            this.getTargetFragment().onActivityResult(getTargetRequestCode(), resultCode, i);
-        } catch (NullPointerException e) {
-            Log.e("NullPointerException", "sendResult: Null target fragment for DatePickerFragment instance");
-        }
+//        this.setResul
     }
 
     public static Date getDateFromIntent(Intent i) {
