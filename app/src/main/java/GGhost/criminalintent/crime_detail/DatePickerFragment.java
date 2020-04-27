@@ -75,19 +75,15 @@ public class DatePickerFragment extends DialogFragment {
                         Почему здесь мы используем GregorianCalendar, а не
                         */
                         Calendar c = Calendar.getInstance();
+                        //Устанавливаем изначально дату, которую приняли, чтобы сохранить время
+                        c.setTime(date);
+                        //Изменяем день-месяц-год
                         c.set(year, month, day);
-                        Date newDate = new GregorianCalendar(year, month, day).getTime();
-                        DatePickerFragment.this.sendResult(Activity.RESULT_OK,newDate);
+                        //Достаем новоиспченную дату из календаря
+                        DatePickerFragment.this.sendResult(Activity.RESULT_OK, c.getTime());
                     }
                 })
                 .create();
-    }
-
-    @Nullable
-    @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-
-        return super.onCreateView(inflater, container, savedInstanceState);
     }
 
 

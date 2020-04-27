@@ -27,6 +27,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.UUID;
 
 import GGhost.criminalintent.R;
@@ -40,12 +41,12 @@ public class CrimeFragment extends Fragment {
     private static final String DATE_PICKER_FRAGMENT_TAG = "DATE_PICKER_FRAGMENT_TAG";
     //Код для TargetFragment'a
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
-//    Константа ключа для значения страницы, на который был пользователь перед нажатием кнопки Back
-    private static final String PAGE_LEFT_INDEX_KEY = "PAGE_LEFT_INDEX_KEY";
+    private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
 
     private Crime mCrime;
     private EditText mTitleTextField;
     private Button mDateButton;
+    private Button mTimeButton;
     private CheckBox mIsSolvedCheckbox;
 
     @Override
@@ -70,15 +71,15 @@ public class CrimeFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_crime, container, false);
 
         mDateButton = v.findViewById(R.id.crime_date_button);
-//        mDateButton.setText(mCrime.getDate().toString());
         mDateButton.setOnClickListener(onDateButtonClickListener);
 
+        mTimeButton = v.findViewById(R.id.crime_time_button);
+        mTimeButton.setOnClickListener(onTimeButtonClickListener);
+
         mIsSolvedCheckbox = v.findViewById(R.id.crime_solved_id);
-//        mIsSolvedCheckbox.setChecked(mCrime.isSolved());
         mIsSolvedCheckbox.setOnCheckedChangeListener(mCheckboxListener);
 
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
-//        mTitleTextField.setText(mCrime.getTitle());
         mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
 
         this.updateUI();
@@ -96,11 +97,20 @@ public class CrimeFragment extends Fragment {
                     if (data != null) {
                         mCrime.setDate(DatePickerFragment.getDateFromIntent(data));
                     } else {
-                        throw new NullPointerException("No data from datePicker, but expected");
+                        throw new NullPointerException("No data from datePickerFragment, but expected");
                     }
                 }
                 updateUI();
                 break;
+            case TIME_PICKER_FRAGMENT_REQUEST_CODE:
+                if (resultCode == Activity.RESULT_OK) {
+                    if (data != null) {
+                        mCrime.setDate(TimePickerFragment.fetchDateFromIntent(data));
+                    } else {
+                        throw new NullPointerException("No data from timePickerFragment, but expected");
+                    }
+                }
+                updateUI();
             default:
                 break;
         }
@@ -150,6 +160,18 @@ public class CrimeFragment extends Fragment {
             datePicker.show(fm, DATE_PICKER_FRAGMENT_TAG);
         }
     };
+    private final View.OnClickListener onTimeButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+            //Нажали на время. Нужно отобразить TimePicker
+            TimePickerFragment timePicker = TimePickerFragment.newInstance(
+                    CrimeFragment.this,
+                    TIME_PICKER_FRAGMENT_REQUEST_CODE,
+                    mCrime.getDate());
+            timePicker.show(Objects.requireNonNull(getFragmentManager()),null);
+
+        }
+    };
 
     public static CrimeFragment newInstance(UUID crimeId) {
         Bundle args = new Bundle();
@@ -163,6 +185,8 @@ public class CrimeFragment extends Fragment {
         mTitleTextField.setText(mCrime.getTitle());
         DateFormat df = new SimpleDateFormat("dd MMM, YYYY", new Locale("ru"));
         mDateButton.setText(df.format(mCrime.getDate()));
+        df = new SimpleDateFormat("HH:mm", new Locale("ru"));
+        mTimeButton.setText(df.format(mCrime.getDate()));
         mIsSolvedCheckbox.setChecked(mCrime.isSolved());
     }
 }

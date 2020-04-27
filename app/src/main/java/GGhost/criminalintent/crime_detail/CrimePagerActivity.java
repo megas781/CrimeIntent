@@ -26,6 +26,7 @@ public class CrimePagerActivity extends AppCompatActivity {
 
     private static final String INTENT_CRIME_ID_KEY = "EXTRA_CRIME_ID_KEY";
     private static final String INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY = "INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY";
+    //    Константа ключа для значения страницы, на который был пользователь перед нажатием кнопки Back
     private static final String PAGE_LEFT_INDEX_KEY = "PAGE_LEFT_INDEX_KEY";
     private List<Crime> mCrimeList;
     private int mCurrentCrimeIndex;

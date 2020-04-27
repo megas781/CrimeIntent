@@ -5,7 +5,6 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -19,14 +18,12 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 
 import GGhost.criminalintent.R;
-import GGhost.criminalintent.crime_detail.CrimeActivity;
 import GGhost.criminalintent.crime_detail.CrimePagerActivity;
 import GGhost.criminalintent.model.Crime;
 import GGhost.criminalintent.model.CrimeLab;
