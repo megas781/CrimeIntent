@@ -23,6 +23,7 @@ import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Objects;
 
 import GGhost.criminalintent.R;
 import GGhost.criminalintent.crime_detail.CrimeActivity;
@@ -43,6 +44,7 @@ public class CrimeListFragment extends Fragment {
     /**
      * В onCreate фрагмент обычно fetch'ит данные модели. Установка данных в представления
      * производится в другом методе (onCreateView)
+     *
      * @param savedInstanceState
      */
     @Override
@@ -54,6 +56,7 @@ public class CrimeListFragment extends Fragment {
     /**
      * Здесь происходит присваивание значений представлениям фрагмента. На момент исполнения метода
      * Представления уже инициализированы и готовы к использованию (в отличие от onCreate)
+     *
      * @param inflater
      * @param container
      * @param savedInstanceState
@@ -63,15 +66,15 @@ public class CrimeListFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         /*Связываем файл fragment_crime_list.xml с помощью infalter. Помещаем его в container (видимо
-        * container – это ссылка на View активности).
-        */
+         * container – это ссылка на View активности).
+         */
         View v = inflater.inflate(R.layout.fragment_crime_list, container, false);
         /* Файл связали. Теперь внутри этого файла нужно связать тег <RecyclerView> со
-        * свойством mCrimeRecyclerView */
+         * свойством mCrimeRecyclerView */
         mCrimeRecyclerView = v.findViewById(R.id.crime_recycler_view);
         /* Абсолютно любой RecyclerView нуждается в LayoutManager'e. Имеено LayoutManager отвечает
-        * за позиционирование ячеек и когда их переиспользовать. Можно создавать кастомные LayoutManager'ы
-        * но чаще хватает использовния заготовленных LinearLayoutManager и GridLayoutManager */
+         * за позиционирование ячеек и когда их переиспользовать. Можно создавать кастомные LayoutManager'ы
+         * но чаще хватает использовния заготовленных LinearLayoutManager и GridLayoutManager */
 
         mCrimeRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         /*
@@ -84,6 +87,7 @@ public class CrimeListFragment extends Fragment {
 
     /**
      * Метод для сбора данных с дочерних активностей
+     *
      * @param requestCode
      * @param resultCode
      * @param data
@@ -95,7 +99,10 @@ public class CrimeListFragment extends Fragment {
             case CRIME_DETAIL_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
 
-                    mCrimeRecyclerView.getAdapter().notifyDataSetChanged();
+                    if (CrimePagerActivity.getPageLeftFromIntent(data) != -1) {
+                        Objects.requireNonNull(mCrimeRecyclerView.getLayoutManager()).scrollToPosition(CrimePagerActivity.getPageLeftFromIntent(data));
+                    }
+                    Objects.requireNonNull(mCrimeRecyclerView.getAdapter()).notifyDataSetChanged();
 
                     /*Здесь должен быть вызван статический метод класса CrimeActivity, достающий из
                     интента data нужные данные */
@@ -109,8 +116,10 @@ public class CrimeListFragment extends Fragment {
         }
     }
 
-    /** Класс ячейки преступления. Внутри Holder'a имеется свойство itemView. Т.е. по сути ViewHolder
-     * может обладать своей собственной логикой. Например, устанавливать внутри себя прослушивание event'ов и т.д.*/
+    /**
+     * Класс ячейки преступления. Внутри Holder'a имеется свойство itemView. Т.е. по сути ViewHolder
+     * может обладать своей собственной логикой. Например, устанавливать внутри себя прослушивание event'ов и т.д.
+     */
     public class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         protected Crime mCrime;
@@ -118,7 +127,8 @@ public class CrimeListFragment extends Fragment {
         protected TextView mTitleTextView;
         protected TextView mDateTextView;
 
-        @Nullable private ImageView mCrimeSolvedImageView;
+        @Nullable
+        private ImageView mCrimeSolvedImageView;
 
         public CrimeHolder(@NonNull View itemView) {
             super(itemView);
@@ -147,17 +157,20 @@ public class CrimeListFragment extends Fragment {
 
         /**
          * Реагирует на нажатие на самого себя
+         *
          * @param v
          */
         @Override
         public void onClick(View v) {
 //            System.out.println("AdapterPos: " + getAdapterPosition() + "; LayoutPos: " + getLayoutPosition());
             Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), mCrime.getId(), getAdapterPosition());
-            startActivityForResult(i,CRIME_DETAIL_REQUEST_CODE);
+            startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
         }
     }
 
-    /** Более серьёзное предступление, ячейка которого имеет кнопку "Вызвать полицию" */
+    /**
+     * Более серьёзное предступление, ячейка которого имеет кнопку "Вызвать полицию"
+     */
     public class SeriousCrimeHolder extends CrimeHolder {
 
         protected Button mCallPoliceButton;
@@ -171,20 +184,23 @@ public class CrimeListFragment extends Fragment {
         private final View.OnClickListener mOnCallButtonTapped = new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Toast t = Toast.makeText(getActivity(), getResources().getString(R.string.you_called_police_alert,(int) Math.round(Math.random() * 30 + 10)), Toast.LENGTH_SHORT);
+                Toast t = Toast.makeText(getActivity(), getResources().getString(R.string.you_called_police_alert, (int) Math.round(Math.random() * 30 + 10)), Toast.LENGTH_SHORT);
                 t.setGravity(Gravity.TOP, 0, 60);
                 t.show();
             }
         };
     }
 
-    /** Адаптер таблицы. Создает ячейки, выбирает, для кого какой макет использовать и т.д.*/
+    /**
+     * Адаптер таблицы. Создает ячейки, выбирает, для кого какой макет использовать и т.д.
+     */
     private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
 
         private List<Crime> mCrimeList;
 
         /**
          * Кастомный конструктор CrimeAdapter'a принимает на вход список преступлений
+         *
          * @param crimeList
          */
         public CrimeAdapter(List<Crime> crimeList) {

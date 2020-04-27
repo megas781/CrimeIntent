@@ -1,5 +1,6 @@
 package GGhost.criminalintent.crime_detail;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
@@ -25,7 +26,7 @@ public class CrimePagerActivity extends AppCompatActivity {
 
     private static final String INTENT_CRIME_ID_KEY = "EXTRA_CRIME_ID_KEY";
     private static final String INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY = "INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY";
-
+    private static final String PAGE_LEFT_INDEX_KEY = "PAGE_LEFT_INDEX_KEY";
     private List<Crime> mCrimeList;
     private int mCurrentCrimeIndex;
 
@@ -71,7 +72,9 @@ public class CrimePagerActivity extends AppCompatActivity {
                 super.onPageSelected(position);
                 /*Мы не передаем никакие данные с Intent'ом, потому что было решено вернуться к использованию
                 метода notifyDataSetChanged() */
-                setResult(RESULT_OK);
+//                setResult(RESULT_OK);
+                setCustomResult(RESULT_OK,new Intent());
+                updateUI();
             }
 
             @Override
@@ -81,6 +84,8 @@ public class CrimePagerActivity extends AppCompatActivity {
         });
 
         updateUI();
+
+        setCustomResult(Activity.RESULT_OK, new Intent());
     }
 
     public static Intent createIntentForCrimeListActivity(Context context, UUID crimeId, int position) {
@@ -104,6 +109,15 @@ public class CrimePagerActivity extends AppCompatActivity {
         updateUI();
     }
 
+    public void setCustomResult(int requestCode, Intent intent) {
+        intent.putExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, getIntent().getIntExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, -228));
+        intent.putExtra(PAGE_LEFT_INDEX_KEY,mViewPager2.getCurrentItem());
+        setResult(requestCode, intent);
+    }
+
+    public static int getPageLeftFromIntent(Intent data) {
+        return (int) data.getIntExtra(PAGE_LEFT_INDEX_KEY,-1);
+    }
 
     private void updateUI() {
         mToBeginningButton.setEnabled(mViewPager2.getCurrentItem() > 0);

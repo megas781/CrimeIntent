@@ -1,2 +1,3 @@
 rootProject.name='CriminalIntent'
 include ':app'
+include ':console'

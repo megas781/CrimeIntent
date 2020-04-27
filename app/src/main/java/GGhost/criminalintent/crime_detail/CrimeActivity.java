@@ -11,6 +11,7 @@ import java.util.UUID;
 
 import GGhost.criminalintent._helpers.SingleFragmentActivity;
 
+@Deprecated
 public class CrimeActivity extends SingleFragmentActivity {
 
     //public - потому что ключ нужен в CrimeFragment
@@ -35,7 +36,7 @@ public class CrimeActivity extends SingleFragmentActivity {
     public static Intent createIntentForCrimeListActivity(Context context, UUID crimeId, int position) {
         Intent i = new Intent(context, CrimeActivity.class);
         i.putExtra(INTENT_CRIME_ID_KEY, crimeId);
-        i.putExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, position);
+        //        i.putExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, position);
         return i;
     }
 
@@ -50,7 +51,7 @@ public class CrimeActivity extends SingleFragmentActivity {
         intent.putExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, getIntent().getIntExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, -228));
         setResult(requestCode, intent);
     }
-    public static int getPickedCrimeIndexFromIndent(Intent i) {
-        return i.getIntExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, -1);
-    }
+//    public static int getPickedCrimeIndexFromIndent(Intent i) {
+//        return i.getIntExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, -1);
+//    }
 }
