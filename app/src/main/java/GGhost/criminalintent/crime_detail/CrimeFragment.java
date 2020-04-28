@@ -4,6 +4,8 @@ import android.app.Activity;
 import android.app.ActivityManager;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
@@ -21,6 +23,7 @@ import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -57,13 +60,32 @@ public class CrimeFragment extends Fragment {
         System.out.println("getArguments()    : " + (getArguments() != null));
         System.out.println("savedInstanceState: " + (savedInstanceState != null));
 
-        mCrime = new Crime();
-        mCrime.setDate(new Date());
+        //Миссия: достать crimeId
 
-        //Миссия: достать crimeId из родительской активности CrimeActivity
-        UUID crimeId = (UUID) getArguments().getSerializable(BUNDLE_CRIME_ID_KEY);
+        UUID crimeId = null;
+        //Сначала пытаемся достать ID из состояния. Оно приорететно над аргументом
+        if (savedInstanceState != null) {
+            //Если есть сохранение в состоянии, то используем его
+            crimeId = (UUID) savedInstanceState.getSerializable(BUNDLE_CRIME_ID_KEY);
+        }
+        //Если в состоянии ничего не нашлось, то хотя бы из аргументов нужно подгрузить
+        if (crimeId == null) {
+            crimeId = (UUID) getArguments().getSerializable(BUNDLE_CRIME_ID_KEY);
+        }
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
     }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(BUNDLE_CRIME_ID_KEY, mCrime.getId());
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
 
     @Nullable
     @Override
@@ -82,12 +104,16 @@ public class CrimeFragment extends Fragment {
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
         mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
 
+        System.out.println("mCrime: " + mCrime);
+
         this.updateUI();
 
         return v;
     }
 
-    /** обработчик данных от потомков */
+    /**
+     * обработчик данных от потомков
+     */
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -95,7 +121,7 @@ public class CrimeFragment extends Fragment {
             case DATE_PICKER_FRAGMENT_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
-                        mCrime.setDate(DatePickerFragment.getDateFromIntent(data));
+                        mCrime.setDate(DatePickerActivity.fetchDateFromIntent(data));
                     } else {
                         throw new NullPointerException("No data from datePickerFragment, but expected");
                     }
@@ -116,7 +142,9 @@ public class CrimeFragment extends Fragment {
         }
     }
 
-    /** Listener изменения названия преступления */
+    /**
+     * Listener изменения названия преступления
+     */
     private final TextWatcher crimeEditTextListener = new TextWatcher() {
 
         @Override
@@ -134,7 +162,9 @@ public class CrimeFragment extends Fragment {
         }
     };
 
-    /** Event-listener смены значения checkbox'a */
+    /**
+     * Event-listener смены значения checkbox'a
+     */
     private final CompoundButton.OnCheckedChangeListener mCheckboxListener = new CompoundButton.OnCheckedChangeListener() {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
@@ -170,7 +200,7 @@ public class CrimeFragment extends Fragment {
                     CrimeFragment.this,
                     TIME_PICKER_FRAGMENT_REQUEST_CODE,
                     mCrime.getDate());
-            timePicker.show(Objects.requireNonNull(getFragmentManager()),null);
+            timePicker.show(Objects.requireNonNull(getFragmentManager()), null);
 
         }
     };
@@ -184,11 +214,18 @@ public class CrimeFragment extends Fragment {
     }
 
     private void updateUI() {
-        mTitleTextField.setText(mCrime.getTitle());
-        DateFormat df = new SimpleDateFormat("dd MMM, YYYY", new Locale("ru"));
-        mDateButton.setText(df.format(mCrime.getDate()));
-        df = new SimpleDateFormat("HH:mm", new Locale("ru"));
-        mTimeButton.setText(df.format(mCrime.getDate()));
-        mIsSolvedCheckbox.setChecked(mCrime.isSolved());
+
+        if (mCrime != null) {
+            mTitleTextField.setText(mCrime.getTitle());
+            DateFormat df = new SimpleDateFormat("dd MMM, YYYY", new Locale("ru"));
+            mDateButton.setText(df.format(mCrime.getDate()));
+            df = new SimpleDateFormat("HH:mm", new Locale("ru"));
+            mTimeButton.setText(df.format(mCrime.getDate()));
+            mIsSolvedCheckbox.setChecked(mCrime.isSolved());
+        } else {
+            System.out.println("атас! mCrime == null");
+        }
+
     }
+
 }

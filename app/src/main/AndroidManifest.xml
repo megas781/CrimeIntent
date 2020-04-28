@@ -11,7 +11,9 @@
 		android:theme="@style/AppTheme">
 		
 		<activity android:name=".crime_detail.CrimePagerActivity"/>
+		
 		<activity android:name=".crime_detail.DatePickerActivity"/>
+		
 		<activity android:name=".crime_list.CrimeListActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
