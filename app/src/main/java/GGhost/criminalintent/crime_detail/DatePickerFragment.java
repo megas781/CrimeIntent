@@ -1,9 +1,6 @@
 package GGhost.criminalintent.crime_detail;
 
-import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,12 +11,13 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
 
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
 import GGhost.criminalintent.R;
 
-interface DatePickerFragmentDelegate extends Parcelable {
+interface DatePickerFragmentDelegate extends Serializable {
     public void onDatePickerConfirmed(Date date);
 }
 
@@ -32,6 +30,7 @@ public class DatePickerFragment extends DialogFragment {
      * принимать дату и передавать
      */
     private static final String CRIME_DATE_KEY = "CRIME_DATE_KEY";
+    public static final String DELEGATE_SERIALIZABLE_KEY = "DELEGATE_SERIALIZABLE_KEY";
 
     private DatePicker mCrimeDatePicker;
     private Button mOkButton;
@@ -41,6 +40,13 @@ public class DatePickerFragment extends DialogFragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //Здесь по идеи должен быть Re-parceled объект
+        if (savedInstanceState != null) {
+            if (savedInstanceState.getSerializable(DELEGATE_SERIALIZABLE_KEY) != null) {
+                //Сохраняем делегата
+                DatePickerFragment.this.delegate = (DatePickerFragmentDelegate) savedInstanceState.getSerializable(DELEGATE_SERIALIZABLE_KEY);
+            }
+        }
     }
 
     @Nullable
@@ -85,14 +91,6 @@ public class DatePickerFragment extends DialogFragment {
                 //Изменяем день-месяц-год
                 c.set(year, month, day);
 
-                //Здесь по идеи должен быть Re-parceled объект
-                if (savedInstanceState != null) {
-                    if (savedInstanceState.getParcelable("CrimeFragmentParcelable") != null) {
-                        DatePickerFragment.this.delegate = savedInstanceState.getParcelable("CrimeFragmentParcelable");
-                        System.out.println("after fetching hash: " + DatePickerFragment.this.delegate.hashCode());
-                    }
-                }
-
                 DatePickerFragment.this.delegate.onDatePickerConfirmed(c.getTime());
                 DatePickerFragment.this.dismiss();
             }
@@ -117,8 +115,6 @@ public class DatePickerFragment extends DialogFragment {
         }
     };
 
-//    public void sendResult(int)
-
     //Новый проприетарный инициализатор, принимающий на вход дату преступления
     public static DatePickerFragment newInstance(Date crimeDate, @Nullable DatePickerFragmentDelegate delegate) {
         Bundle args = new Bundle();
@@ -133,7 +129,7 @@ public class DatePickerFragment extends DialogFragment {
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
-        System.out.println("before saving hash: " + this.delegate.hashCode());
-        outState.putParcelable("CrimeFragmentParcelable", this.delegate);
+        //remark: Serializable preserves hashCode
+        outState.putSerializable(DELEGATE_SERIALIZABLE_KEY, this.delegate);
     }
 }
