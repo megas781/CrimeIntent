@@ -37,18 +37,18 @@ public class TimePickerFragment extends DialogFragment {
         mTimePicker = v.findViewById(R.id.crime_time_picker_id);
 
         mDateTime = (Date) Objects.requireNonNull(getArguments()).getSerializable(CRIME_TIME_KEY);
-        mTimePicker.setIs24HourView(true);
-
         Calendar c = Calendar.getInstance();
         c.setTime(mDateTime);
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            mTimePicker.setHour(c.get(Calendar.HOUR));
+            mTimePicker.setHour(c.get(Calendar.HOUR_OF_DAY));
             mTimePicker.setMinute(c.get(Calendar.MINUTE));
         } else {
-            mTimePicker.setCurrentHour(c.get(Calendar.HOUR));
+            mTimePicker.setCurrentHour(c.get(Calendar.HOUR_OF_DAY));
             mTimePicker.setCurrentMinute(c.get(Calendar.MINUTE));
         }
+
+        mTimePicker.setIs24HourView(true);
 
         mTimePicker.setOnTimeChangedListener(new TimePicker.OnTimeChangedListener() {
             @Override
@@ -77,10 +77,10 @@ public class TimePickerFragment extends DialogFragment {
 
                         //Достаем данные из mTimePicker'a и усанавливаем их в календарь c
                         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                            c.set(Calendar.HOUR, mTimePicker.getHour());
+                            c.set(Calendar.HOUR_OF_DAY, mTimePicker.getHour());
                             c.set(Calendar.MINUTE, mTimePicker.getMinute());
                         } else {
-                            c.set(Calendar.HOUR, mTimePicker.getCurrentHour());
+                            c.set(Calendar.HOUR_OF_DAY, mTimePicker.getCurrentHour());
                             c.set(Calendar.MINUTE, mTimePicker.getCurrentMinute());
                         }
 

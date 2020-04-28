@@ -1,12 +1,8 @@
 package GGhost.criminalintent.crime_detail;
 
 import android.app.Activity;
-import android.app.ActivityManager;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcel;
-import android.os.Parcelable;
-import android.provider.Settings;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -19,16 +15,10 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,7 +31,7 @@ public class CrimeFragment extends Fragment {
 
     private static final String BUNDLE_CRIME_ID_KEY = "BUNDLE_CRIME_ID_KEY";
     //Тег для FragmentManager'a
-    private static final String DATE_PICKER_FRAGMENT_TAG = "DATE_PICKER_FRAGMENT_TAG";
+//    private static final String DATE_PICKER_FRAGMENT_TAG = "DATE_PICKER_FRAGMENT_TAG";
     //Код для TargetFragment'a
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
     private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
