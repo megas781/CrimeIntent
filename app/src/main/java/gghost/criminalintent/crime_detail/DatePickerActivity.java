@@ -1,21 +1,18 @@
-package GGhost.criminalintent.crime_detail;
+package gghost.criminalintent.crime_detail;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Configuration;
 import android.os.Bundle;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import java.io.Serializable;
 import java.util.Date;
-import GGhost.criminalintent.R;
-import GGhost.criminalintent._helpers.SingleFragmentActivity;
+import gghost.criminalintent.R;
+import gghost.criminalintent._helpers.AbstractSingleFragmentActivity;
 
-public class DatePickerActivity extends SingleFragmentActivity implements DatePickerFragmentDelegate, Serializable {
+public class DatePickerActivity extends AbstractSingleFragmentActivity implements DatePickerFragmentDelegate, Serializable {
 
     private static final String CRIME_DATE_KEY = "CRIME_DATE_KEY";
 

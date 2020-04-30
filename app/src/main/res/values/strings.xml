@@ -1,21 +1,35 @@
 <resources>
 	<string name="app_name">CriminalIntent</string>
 	
-	<string name="crime_title_hint">Введите название преступления</string>
-	<string name="crime_title_label">Название</string>
-	<string name="crime_details_label">Подробнее</string>
-	<string name="crime_solved_label">Уже решено</string>
+	<string name="crime_title_hint">Enter title title</string>
+	<string name="crime_title_label">Title</string>
+	<string name="crime_details_label">Detail</string>
+	<string name="crime_solved_label">Solved</string>
 	
 	<!-- TODO: Remove or change this placeholder text -->
 	<string name="hello_blank_fragment">Hello blank fragment</string>
 	
-	<string name="call_police_button_text">Вызвать \n Полицию</string>
-	<string name="you_called_police_alert">Вы вызвали полицию! Будем через %d минут</string>
+	<string name="call_police_button_text">Call Police</string>
+	<string name="you_called_police_alert">You called police. We will come in %d minutes!</string>
 	
-	<string name="to_beginning_button_label">В начало</string>
-	<string name="to_end_button_label">В конец</string>
+	<string name="to_beginning_button_label">To beginning</string>
+	<string name="to_end_button_label">To end</string>
 	
-	<string name="date_of_crime_label">Дата преступления:</string>
+	<string name="date_of_crime_label">Crime date:</string>
 	
-	<string name="close_button_label">Закрыть</string>
+	<string name="close_button_label">Close</string>
+	
+	
+	<string name="new_crime">New crime</string>
+	<string name="show_subtitle">Show Count</string>
+	<string name="hide_subtitle">Hide count</string>
+	
+	<plurals name="subtitle_plural">
+		<item quantity="zero">No crimes</item>
+		<item quantity="one">%1$d crime</item>
+		<item quantity="other">%1$d crimes</item>
+	</plurals>
+	
+	<string name="delete_crime">Delete crime</string>
+	
 </resources>

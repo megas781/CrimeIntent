@@ -1,4 +1,4 @@
-package GGhost.criminalintent.crime_detail;
+package gghost.criminalintent.crime_detail;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -6,6 +6,9 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -15,6 +18,7 @@ import android.widget.EditText;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
 import java.text.DateFormat;
@@ -23,20 +27,24 @@ import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
 
-import GGhost.criminalintent.R;
-import GGhost.criminalintent.model.Crime;
-import GGhost.criminalintent.model.CrimeLab;
+import gghost.criminalintent.R;
+import gghost.criminalintent.model.Crime;
+import gghost.criminalintent.model.CrimeLab;
 
 public class CrimeFragment extends Fragment {
 
-    private static final String BUNDLE_CRIME_ID_KEY = "BUNDLE_CRIME_ID_KEY";
+    private static final String ARG_CRIME_ID_KEY = "ARG_CRIME_ID_KEY";
+    private static final String ARG_IS_NEW_KEY = "ARG_IS_NEW_KEY";
     //Тег для FragmentManager'a
 //    private static final String DATE_PICKER_FRAGMENT_TAG = "DATE_PICKER_FRAGMENT_TAG";
     //Код для TargetFragment'a
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
     private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
 
+    private static final int MENU_ITEM_DELETE_CRIME_ID = 1;
+
     private Crime mCrime;
+    private boolean mIsNew;
     private EditText mTitleTextField;
     private Button mDateButton;
     private Button mTimeButton;
@@ -45,7 +53,6 @@ public class CrimeFragment extends Fragment {
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
 
         System.out.println("getArguments()    : " + (getArguments() != null));
         System.out.println("savedInstanceState: " + (savedInstanceState != null));
@@ -56,19 +63,22 @@ public class CrimeFragment extends Fragment {
         //Сначала пытаемся достать ID из состояния. Оно приорететно над аргументом
         if (savedInstanceState != null) {
             //Если есть сохранение в состоянии, то используем его
-            crimeId = (UUID) savedInstanceState.getSerializable(BUNDLE_CRIME_ID_KEY);
+            crimeId = (UUID) savedInstanceState.getSerializable(ARG_CRIME_ID_KEY);
         }
         //Если в состоянии ничего не нашлось, то хотя бы из аргументов нужно подгрузить
         if (crimeId == null) {
-            crimeId = (UUID) getArguments().getSerializable(BUNDLE_CRIME_ID_KEY);
+            crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID_KEY);
         }
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
+        mIsNew = getArguments().getBoolean(ARG_IS_NEW_KEY, false);
+
+        this.setHasOptionsMenu(true);
     }
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable(BUNDLE_CRIME_ID_KEY, mCrime.getId());
+        outState.putSerializable(ARG_CRIME_ID_KEY, mCrime.getId());
     }
 
     @Override
@@ -93,6 +103,12 @@ public class CrimeFragment extends Fragment {
 
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
         mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
+
+        ((AppCompatActivity) Objects.requireNonNull(this.getActivity())).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        if (mIsNew) {
+            mTitleTextField.requestFocus();
+        }
 
         System.out.println("mCrime: " + mCrime);
 
@@ -195,9 +211,28 @@ public class CrimeFragment extends Fragment {
         }
     };
 
-    public static CrimeFragment newInstance(UUID crimeId) {
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.add(Menu.NONE, MENU_ITEM_DELETE_CRIME_ID,Menu.NONE,R.string.delete_crime);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case MENU_ITEM_DELETE_CRIME_ID:
+                CrimeLab.get(getActivity()).deleteCrime(mCrime.getId());
+                getActivity().finish();
+                return true;
+            default:
+        return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public static CrimeFragment newInstance(UUID crimeId, boolean isNew) {
         Bundle args = new Bundle();
-        args.putSerializable(BUNDLE_CRIME_ID_KEY, crimeId);
+        args.putSerializable(ARG_CRIME_ID_KEY, crimeId);
+        args.putBoolean(ARG_IS_NEW_KEY, isNew);
         CrimeFragment fragment = new CrimeFragment();
         fragment.setArguments(args);
         return fragment;
@@ -217,5 +252,16 @@ public class CrimeFragment extends Fragment {
         }
 
     }
+
+//    /**
+//     * Метод для дополнения интента родителя. Задача состоит в том, чтобы фрагмент знал, загружает
+//     * ли он уже существующее преступление или новое. Метод не обязательно будет вызываться родителем.
+//     * На этот случай и предусмотрены дефолтные значения методов getExtra.
+//     * @param i
+//     * @param isNew
+//     */
+//    public static void decorateIntent(Intent i, boolean isNew) {
+//        i.putExtra(IS_NEW_KEY,isNew);
+//    }
 
 }

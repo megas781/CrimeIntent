@@ -1,4 +1,4 @@
-package GGhost.criminalintent.crime_detail;
+package gghost.criminalintent.crime_detail;
 
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -15,7 +15,7 @@ import java.io.Serializable;
 import java.util.Calendar;
 import java.util.Date;
 
-import GGhost.criminalintent.R;
+import gghost.criminalintent.R;
 
 interface DatePickerFragmentDelegate extends Serializable {
     public void onDatePickerConfirmed(Date date);

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	
+	<string name="app_name">Криминальный журнал</string>
+	
+	<string name="crime_title_hint">Введите название преступления</string>
+	<string name="crime_title_label">Название</string>
+	<string name="crime_details_label">Подробнее</string>
+	<string name="crime_solved_label">Уже решено</string>
+	
+	<!-- TODO: Remove or change this placeholder text -->
+	<string name="hello_blank_fragment">Hello blank fragment</string>
+	
+	<string name="call_police_button_text">Вызвать \n Полицию</string>
+	<string name="you_called_police_alert">Вы вызвали полицию! Будем через %d минут</string>
+	
+	<string name="to_beginning_button_label">В начало</string>
+	<string name="to_end_button_label">В конец</string>
+	
+	<string name="date_of_crime_label">Дата преступления:</string>
+	
+	<string name="close_button_label">Закрыть</string>
+	
+	
+	<string name="new_crime">Новое Преступление</string>
+	<string name="show_subtitle">Показать кол-во</string>
+	<string name="hide_subtitle">Скрыть кол-во</string>
+	
+	<plurals name="subtitle_plural">
+		<item quantity="zero">Пока нет преступлений</item>
+		<item quantity="one">%1$d преступление</item>
+		<item quantity="two">%1$d преступления</item>
+		<item quantity="few">%1$d преступления</item>
+		<item quantity="many">%1$d преступлений</item>
+		<item quantity="other">%1$d преступлений</item>
+	</plurals>
+	
+	<string name="delete_crime">Удалить преступление</string>
+	
+</resources>

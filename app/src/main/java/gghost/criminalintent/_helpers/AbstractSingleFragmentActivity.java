@@ -1,4 +1,4 @@
-package GGhost.criminalintent._helpers;
+package gghost.criminalintent._helpers;
 
 import android.os.Bundle;
 
@@ -7,9 +7,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 
-import GGhost.criminalintent.R;
+import gghost.criminalintent.R;
 
-public abstract class SingleFragmentActivity extends AppCompatActivity {
+public abstract class AbstractSingleFragmentActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {

@@ -1,4 +1,4 @@
-package GGhost.criminalintent;
+package gghost.criminalintent;
 
 import android.content.Context;
 
@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getInstrumentation().getTargetContext();
 
-        assertEquals("GGhost.criminalintent", appContext.getPackageName());
+        assertEquals("gghost.criminalintent", appContext.getPackageName());
     }
 }

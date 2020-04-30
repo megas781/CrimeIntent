@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-	package="GGhost.criminalintent">
+	package="gghost.criminalintent">
 	
 	<application
 		android:allowBackup="true"
@@ -10,11 +10,12 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme">
 		
-		<activity android:name=".crime_detail.CrimePagerActivity"/>
+		<activity android:name="gghost.criminalintent.crime_detail.DatePickerActivity"/>
 		
-		<activity android:name=".crime_detail.DatePickerActivity"/>
+		<activity android:name="gghost.criminalintent.crime_detail.CrimePagerActivity"
+			android:parentActivityName=".crime_list.CrimeListActivity"/>
 		
-		<activity android:name=".crime_list.CrimeListActivity">
+		<activity android:name="gghost.criminalintent.crime_list.CrimeListActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />

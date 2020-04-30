@@ -1,4 +1,4 @@
-package GGhost.criminalintent.crime_detail;
+package gghost.criminalintent.crime_detail;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -20,7 +20,7 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.Objects;
 
-import GGhost.criminalintent.R;
+import gghost.criminalintent.R;
 
 public class TimePickerFragment extends DialogFragment {
 

@@ -1,4 +1,6 @@
-package GGhost.criminalintent.model;
+package gghost.criminalintent.model;
+
+import androidx.annotation.NonNull;
 
 import java.util.Date;
 import java.util.UUID;
@@ -44,4 +46,9 @@ public class Crime {
         mDate = new Date();
     }
 
+    @NonNull
+    @Override
+    public String toString() {
+        return this.mTitle + " (" + this.mId.toString() + ")";
+    }
 }
