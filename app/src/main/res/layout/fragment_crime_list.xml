@@ -1,8 +1,38 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.recyclerview.widget.RecyclerView
-	xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_height="match_parent"
+<FrameLayout xmlns:app="http://schemas.android.com/apk/res-auto"
 	android:layout_width="match_parent"
-	android:id="@+id/crime_recycler_view">
+	android:layout_height="match_parent"
+	xmlns:tools="http://schemas.android.com/tools"
+	android:id="@+id/fragment_crime_list_container_id"
+	xmlns:android="http://schemas.android.com/apk/res/android">
 	
-</androidx.recyclerview.widget.RecyclerView>
+	<androidx.recyclerview.widget.RecyclerView
+		android:id="@+id/crime_recycler_view"
+		android:layout_width="match_parent"
+		android:layout_height="match_parent" />
+	
+	<LinearLayout
+		android:layout_width="wrap_content"
+		android:layout_height="wrap_content"
+		android:layout_gravity="center"
+		android:orientation="vertical"
+		android:id="@+id/on_empty_new_crime_button_container_id"
+		android:gravity="center">
+		<TextView
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:text="@string/there_are_no_crimes_yet"
+			android:textSize="24sp"
+			android:textAlignment="center"
+			android:layout_marginBottom="16dp"
+			/>
+		<Button
+			android:id="@+id/on_empty_new_crime_button_id"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:paddingHorizontal="24dp"
+			android:paddingVertical="8dp"
+			android:text="@string/new_crime" />
+	</LinearLayout>
+
+</FrameLayout>

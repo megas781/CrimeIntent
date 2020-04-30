@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -44,6 +45,8 @@ public class CrimeListFragment extends Fragment {
 
     //Экземпляр RecyclerView
     private RecyclerView mCrimeRecyclerView;
+    private LinearLayout mOnEmptyCrimeButtonContainer;
+    private Button mOnEmptyCrimeButton;
 
     private boolean mIsSubtitleVisible = false;
 
@@ -94,6 +97,15 @@ public class CrimeListFragment extends Fragment {
          */
         mCrimeRecyclerView.setAdapter(new CrimeAdapter(CrimeLab.get(getActivity()).getCrimeList()));
 
+
+        mOnEmptyCrimeButtonContainer = v.findViewById(R.id.on_empty_new_crime_button_container_id);
+        mOnEmptyCrimeButton = mOnEmptyCrimeButtonContainer.findViewById(R.id.on_empty_new_crime_button_id);
+        mOnEmptyCrimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                CrimeListFragment.this.goToCreateNewCrimeScene();
+            }
+        });
         return v;
     }
 
@@ -265,7 +277,6 @@ public class CrimeListFragment extends Fragment {
             }
 
         }
-
         @Override
         public void onBindViewHolder(@NonNull CrimeHolder holder, int position) {
             Crime crime = mCrimeList.get(position);
@@ -275,6 +286,7 @@ public class CrimeListFragment extends Fragment {
         //Определяет количество ячеек
         @Override
         public int getItemCount() {
+            mOnEmptyCrimeButtonContainer.setVisibility(mCrimeList.size() == 0 ? View.VISIBLE : View.INVISIBLE);
             return mCrimeList.size();
         }
 
@@ -301,14 +313,7 @@ public class CrimeListFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case R.id.new_crime_menu_item_id:
-                //Создаем новое преступление
-                Crime newCrime = new Crime();
-                CrimeLab.get(getActivity()).addCrime(newCrime);
-
-                Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
-
-                startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
-
+                goToCreateNewCrimeScene();
                 return true;
             case R.id.show_subtitle_item_id:
                 mIsSubtitleVisible = !mIsSubtitleVisible;
@@ -320,7 +325,6 @@ public class CrimeListFragment extends Fragment {
         }
     }
 
-
     private void updateSubtitle() {
         int crimeCount = CrimeLab.get(getActivity()).getCrimeList().size();
         String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural, crimeCount, crimeCount);
@@ -331,7 +335,6 @@ public class CrimeListFragment extends Fragment {
                         .getSupportActionBar()
                         .setSubtitle( mIsSubtitleVisible ? subtitle : null);
     }
-
     //    //Самописный метод для обновления UI
 //    private void updateUI() {
 //
@@ -349,5 +352,13 @@ public class CrimeListFragment extends Fragment {
 //            //пока что говорят сделать через общее обновление ячеек
 //        }
 //    }
+
+    private void goToCreateNewCrimeScene() {
+        //Создаем новое преступление
+        Crime newCrime = new Crime();
+        CrimeLab.get(getActivity()).addCrime(newCrime);
+        Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
+        startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
+    }
 
 }

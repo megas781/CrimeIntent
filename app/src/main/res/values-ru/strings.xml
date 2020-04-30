@@ -37,4 +37,5 @@
 	
 	<string name="delete_crime">Удалить преступление</string>
 	
+	<string name="there_are_no_crimes_yet">Еще не зафиксировано никаких претуплений</string>
 </resources>

@@ -32,4 +32,6 @@
 	
 	<string name="delete_crime">Delete crime</string>
 	
+	<string name="there_are_no_crimes_yet">There are no crimes yet</string>
+	
 </resources>

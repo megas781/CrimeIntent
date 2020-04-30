@@ -28,7 +28,7 @@ public class CrimeLab {
 
         mCrimeList = new ArrayList<>();
 
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 0; i++) {
             Crime newCrime = new Crime();
             newCrime.setTitle("Crime #" + (i + 1) + "....................");
             newCrime.setDate(new Date());
