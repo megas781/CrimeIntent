@@ -5,14 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
-import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Hashtable;
-import java.util.List;
 import java.util.UUID;
 
-import gghost.criminalintent.database.CrimeBaseHelper;
-import gghost.criminalintent.database.CrimeCursorWrapper;
+import gghost.criminalintent.database.CrimeDatabaseBuilder;
+import gghost.criminalintent.database.CrimeCursor;
 import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
 
 public class CrimeLab {
@@ -28,7 +25,7 @@ public class CrimeLab {
         //Достаем глобальный контекст приложения
         mContext = context.getApplicationContext();
         //Инициализируем базу данных
-        mDatabase = new CrimeBaseHelper(mContext).getWritableDatabase();
+        mDatabase = new CrimeDatabaseBuilder(mContext).getWritableDatabase();
 
 //        mCrimeList = new ArrayList<>();
     }
@@ -46,7 +43,7 @@ public class CrimeLab {
         ArrayList<Crime> crimeList = new ArrayList<>();
 
         //два null обозначают "брать все!"
-        CrimeCursorWrapper cursorWrapper = queryCrimes(null, null);
+        CrimeCursor cursorWrapper = queryCrimes(null, null);
         try {
             cursorWrapper.moveToFirst();
             /* Свойство cursor.IsAfterLast() сообщает, что указатель вышел за пределы последней
@@ -72,7 +69,7 @@ public class CrimeLab {
     }
     public Crime getCrime(UUID uuid) {
 
-        CrimeCursorWrapper crimeCursor = queryCrimes(
+        CrimeCursor crimeCursor = queryCrimes(
                 CrimeTable.Cols.UUID + " = ?",
                 new String[]{uuid.toString()});
 
@@ -128,10 +125,11 @@ public class CrimeLab {
         values.put(CrimeTable.Cols.UUID,crime.getId().toString());
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
+        values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
 
         return values;
     }
-    private CrimeCursorWrapper queryCrimes(String whereClause, String[] whereArgs) {
+    private CrimeCursor queryCrimes(String whereClause, String[] whereArgs) {
         Cursor cursor = mDatabase.query(
                 CrimeTable.NAME,
                 null,whereClause,
@@ -140,7 +138,7 @@ public class CrimeLab {
                 null,
                 null);
 
-        return new CrimeCursorWrapper(cursor);
+        return new CrimeCursor(cursor);
     }
 
 

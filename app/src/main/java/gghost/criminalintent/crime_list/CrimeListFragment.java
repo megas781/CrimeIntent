@@ -24,11 +24,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import gghost.criminalintent.R;
-import gghost.criminalintent.crime_detail.CrimePagerActivity;
+import gghost.criminalintent.crime_detail.CrimeDetailPagerActivity;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
@@ -131,8 +130,8 @@ public class CrimeListFragment extends Fragment {
             case CRIME_DETAIL_REQUEST_CODE:
                 if (resultCode == Activity.RESULT_OK) {
 
-                    if (CrimePagerActivity.getPageLeftFromIntent(data) != -1) {
-                        Objects.requireNonNull(mCrimeRecyclerView.getLayoutManager()).scrollToPosition(CrimePagerActivity.getPageLeftFromIntent(data));
+                    if (CrimeDetailPagerActivity.getPageLeftFromIntent(data) != -1) {
+                        Objects.requireNonNull(mCrimeRecyclerView.getLayoutManager()).scrollToPosition(CrimeDetailPagerActivity.getPageLeftFromIntent(data));
                     }
                     Objects.requireNonNull(mCrimeRecyclerView.getAdapter()).notifyDataSetChanged();
 
@@ -222,7 +221,7 @@ public class CrimeListFragment extends Fragment {
         //Создаем новое преступление
         Crime newCrime = new Crime();
         CrimeLab.get(getActivity()).addCrime(newCrime);
-        Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
+        Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
         startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
     }
 
@@ -284,7 +283,7 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            Intent i = CrimePagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
+            Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
             startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
         }
     }

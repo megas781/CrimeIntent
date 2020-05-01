@@ -22,7 +22,7 @@ import gghost.criminalintent.R;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
-public class CrimePagerActivity extends AppCompatActivity {
+public class CrimeDetailPagerActivity extends AppCompatActivity {
 
     private static final String INTENT_CRIME_ID_KEY = "EXTRA_CRIME_ID_KEY";
     private static final String INTENT_IS_NEW_KEY = "INTENT_IS_NEW_KEY";
@@ -57,7 +57,7 @@ public class CrimePagerActivity extends AppCompatActivity {
             @NonNull
             @Override
             public Fragment createFragment(int position) {
-                CrimeFragment cf = CrimeFragment.newInstance(mCrimeList.get(position).getId(), mIsNew);
+                CrimeDetailFragment cf = CrimeDetailFragment.newInstance(mCrimeList.get(position).getId(), mIsNew);
                 //После создания первого фрагмента mIsNew навсегда становится false
                 mIsNew = false;
                 return cf;
@@ -100,7 +100,7 @@ public class CrimePagerActivity extends AppCompatActivity {
     }
 
     public static Intent createIntentForCrimeListActivity(Context context, UUID crimeId, int position, boolean isNew) {
-        Intent i = new Intent(context, CrimePagerActivity.class);
+        Intent i = new Intent(context, CrimeDetailPagerActivity.class);
         i.putExtra(INTENT_CRIME_ID_KEY, crimeId);
         i.putExtra(INTENT_CRIME_RECYCLER_VIEW_POSITION_KEY, position);
         i.putExtra(INTENT_IS_NEW_KEY, isNew);

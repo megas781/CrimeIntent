@@ -6,15 +6,14 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
 
-public class CrimeBaseHelper extends SQLiteOpenHelper {
+public class CrimeDatabaseBuilder extends SQLiteOpenHelper {
 
-    private static final int VERSION = 1;
+    private static final int VERSION = 2;
     private static final String DATABASE_NAME = "crimeBase.db";
 
-    public CrimeBaseHelper(Context context) {
+    public CrimeDatabaseBuilder(Context context) {
         super(context, DATABASE_NAME, null, VERSION);
     }
-
 
     /**
      * Метод, вызывающийся, если база данных еще не создана (только при первом включении)
@@ -27,7 +26,8 @@ public class CrimeBaseHelper extends SQLiteOpenHelper {
                 "%2$s," + //uuid
                 "%3$s," + //title
                 "%4$s," + //date
-                "%5$s" + //solved
+                "%5$s," + //solved
+                "%6$s" + //suspect
                 ")";
 
         db.execSQL(String.format(createTableQuery,
@@ -35,9 +35,8 @@ public class CrimeBaseHelper extends SQLiteOpenHelper {
                 CrimeTable.Cols.UUID,
                 CrimeTable.Cols.TITLE,
                 CrimeTable.Cols.DATE,
-                CrimeTable.Cols.SOLVED));
-
-
+                CrimeTable.Cols.SOLVED,
+                CrimeTable.Cols.SUSPECT));
     }
 
     /**

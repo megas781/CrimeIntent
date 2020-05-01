@@ -10,12 +10,12 @@
 		android:supportsRtl="true"
 		android:theme="@style/AppTheme">
 		
-		<activity android:name="gghost.criminalintent.crime_detail.DatePickerActivity"/>
+		<activity android:name=".crime_detail.DatePickerActivity"/>
 		
-		<activity android:name="gghost.criminalintent.crime_detail.CrimePagerActivity"
+		<activity android:name=".crime_detail.CrimeDetailPagerActivity"
 			android:parentActivityName=".crime_list.CrimeListActivity"/>
 		
-		<activity android:name="gghost.criminalintent.crime_list.CrimeListActivity">
+		<activity android:name=".crime_list.CrimeListActivity">
 			<intent-filter>
 				<action android:name="android.intent.action.MAIN" />
 				<category android:name="android.intent.category.LAUNCHER" />

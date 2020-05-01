@@ -31,7 +31,7 @@ import gghost.criminalintent.R;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
-public class CrimeFragment extends Fragment {
+public class CrimeDetailFragment extends Fragment {
 
     private static final String ARG_CRIME_ID_KEY = "ARG_CRIME_ID_KEY";
     private static final String ARG_IS_NEW_KEY = "ARG_IS_NEW_KEY";
@@ -207,7 +207,7 @@ public class CrimeFragment extends Fragment {
         public void onClick(View v) {
             //Нажали на время. Нужно отобразить TimePicker
             TimePickerFragment timePicker = TimePickerFragment.newInstance(
-                    CrimeFragment.this,
+                    CrimeDetailFragment.this,
                     TIME_PICKER_FRAGMENT_REQUEST_CODE,
                     mCrime.getDate());
             timePicker.show(Objects.requireNonNull(getFragmentManager()), null);
@@ -233,14 +233,7 @@ public class CrimeFragment extends Fragment {
         }
     }
 
-    public static CrimeFragment newInstance(UUID crimeId, boolean isNew) {
-        Bundle args = new Bundle();
-        args.putSerializable(ARG_CRIME_ID_KEY, crimeId);
-        args.putBoolean(ARG_IS_NEW_KEY, isNew);
-        CrimeFragment fragment = new CrimeFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
+
 
     private void updateUI() {
 
@@ -257,15 +250,21 @@ public class CrimeFragment extends Fragment {
 
     }
 
-//    /**
-//     * Метод для дополнения интента родителя. Задача состоит в том, чтобы фрагмент знал, загружает
-//     * ли он уже существующее преступление или новое. Метод не обязательно будет вызываться родителем.
-//     * На этот случай и предусмотрены дефолтные значения методов getExtra.
-//     * @param i
-//     * @param isNew
-//     */
-//    public static void decorateIntent(Intent i, boolean isNew) {
-//        i.putExtra(IS_NEW_KEY,isNew);
-//    }
+    @NonNull
+    private String getCrimeReport() {
+        String solvedString = mCrime.isSolved() ? getString(R.string.crime_report_solved) : getString(R.string.crime_report_unsolved);
+//        String DateFor
+        return null;
+    }
 
+
+    @NonNull
+    public static CrimeDetailFragment newInstance(UUID crimeId, boolean isNew) {
+        Bundle args = new Bundle();
+        args.putSerializable(ARG_CRIME_ID_KEY, crimeId);
+        args.putBoolean(ARG_IS_NEW_KEY, isNew);
+        CrimeDetailFragment fragment = new CrimeDetailFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
 }

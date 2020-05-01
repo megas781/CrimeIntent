@@ -37,4 +37,6 @@
 	<string name="delete_crime">Удалить преступление</string>
 	
 	<string name="there_are_no_crimes_yet">Еще не зафиксировано никаких претуплений</string>
+	<string name="crime_choose_suspect_label">Указать подозреваемого</string>
+	<string name="report_crime_label">Рассказать об преступлении</string>
 </resources>

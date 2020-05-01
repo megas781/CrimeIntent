@@ -1,6 +1,7 @@
 package gghost.criminalintent.model;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 import java.io.Serializable;
 import java.util.Date;
@@ -12,7 +13,9 @@ public class Crime implements Serializable {
     private String mTitle;
     private Date mDate;
     private boolean mSolved;
-    private boolean mRequiresPolice;
+
+    @Nullable
+    private String mSuspect;
 
     public UUID getId() {
         return mId;
@@ -35,11 +38,12 @@ public class Crime implements Serializable {
     public void setSolved(boolean solved) {
         mSolved = solved;
     }
-    public boolean isRequiresPolice() {
-        return mRequiresPolice;
+    @Nullable
+    public String getSuspect() {
+        return mSuspect;
     }
-    public void setRequiresPolice(boolean requiresPolice) {
-        mRequiresPolice = requiresPolice;
+    public void setSuspect(@Nullable String suspect) {
+        mSuspect = suspect;
     }
 
     public Crime() {
@@ -50,6 +54,9 @@ public class Crime implements Serializable {
     public Crime(UUID uuid) {
         mId = uuid;
         mDate = new Date();
+        mSolved = false;
+        mTitle = "";
+        mSuspect = null;
     }
 
     @NonNull
