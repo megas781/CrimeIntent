@@ -73,6 +73,8 @@ public class CrimeFragment extends Fragment {
         mIsNew = getArguments().getBoolean(ARG_IS_NEW_KEY, false);
 
         this.setHasOptionsMenu(true);
+
+
     }
 
     @Override
@@ -82,10 +84,12 @@ public class CrimeFragment extends Fragment {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onPause() {
+        super.onPause();
+        //Обновляем данные о преступлении. Это нужно, например, при свайпе, или при нажатии
+        //кнопки back после окончания редактирования
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
-
 
     @Nullable
     @Override

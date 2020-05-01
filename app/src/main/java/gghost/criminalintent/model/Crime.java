@@ -2,10 +2,11 @@ package gghost.criminalintent.model;
 
 import androidx.annotation.NonNull;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.UUID;
 
-public class Crime {
+public class Crime implements Serializable {
 
     private UUID mId;
     private String mTitle;
@@ -42,7 +43,12 @@ public class Crime {
     }
 
     public Crime() {
-        mId = UUID.randomUUID();
+        /* Достаточно странная конструкция. Но в целом понятно. Мы обращяемся внутри одного конструктора
+        * через "this" к другому */
+        this(UUID.randomUUID());
+    }
+    public Crime(UUID uuid) {
+        mId = uuid;
         mDate = new Date();
     }
 

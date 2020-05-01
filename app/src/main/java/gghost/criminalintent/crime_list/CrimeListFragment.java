@@ -3,7 +3,6 @@ package gghost.criminalintent.crime_list;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -14,7 +13,6 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -25,8 +23,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 
 import gghost.criminalintent.R;
@@ -43,8 +41,13 @@ public class CrimeListFragment extends Fragment {
     private static final int CRIME_NEW_REQUEST_CODE = 2;
     private static final String STATE_IS_SUBTITLE_VISIBLE_KEY = "STATE_IS_SUBTITLE_VISIBLE_KEY";
 
+    private static final String ARG_ARRAY_LIST_KEY = "ARG_ARRAY_LIST_KEY";
+
     //Экземпляр RecyclerView
     private RecyclerView mCrimeRecyclerView;
+    //Адаптер
+    private CrimeHolderAdapter mCrimeHolderAdapter;
+
     private LinearLayout mOnEmptyCrimeButtonContainer;
     private Button mOnEmptyCrimeButton;
 
@@ -60,10 +63,15 @@ public class CrimeListFragment extends Fragment {
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         /* Фрагмент должен изъявить желание участвовать в формировании меню, чтобы
-        * FragmentManager вызвал его метод onCreateOptionsMenu */
+         * FragmentManager вызвал его метод onCreateOptionsMenu */
         setHasOptionsMenu(true);
         if (savedInstanceState != null) {
             mIsSubtitleVisible = savedInstanceState.getBoolean(STATE_IS_SUBTITLE_VISIBLE_KEY, false);
+        }
+
+        if (getArguments() != null) {
+            ArrayList<Crime> crimes = (ArrayList<Crime>) getArguments().getSerializable(ARG_ARRAY_LIST_KEY);
+            mCrimeHolderAdapter = new CrimeHolderAdapter(crimes);
         }
     }
 
@@ -95,15 +103,14 @@ public class CrimeListFragment extends Fragment {
         И конечно же RecyclerView нуждается в поставщике данных или адаптере,
         как это называется в Андроид-программировании.
          */
-        mCrimeRecyclerView.setAdapter(new CrimeAdapter(CrimeLab.get(getActivity()).getCrimeList()));
-
+        mCrimeRecyclerView.setAdapter(mCrimeHolderAdapter);
 
         mOnEmptyCrimeButtonContainer = v.findViewById(R.id.on_empty_new_crime_button_container_id);
         mOnEmptyCrimeButton = mOnEmptyCrimeButtonContainer.findViewById(R.id.on_empty_new_crime_button_id);
         mOnEmptyCrimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                CrimeListFragment.this.goToCreateNewCrimeScene();
+                CrimeListFragment.this.goToCreateNewCrimeActivity();
             }
         });
         return v;
@@ -116,7 +123,6 @@ public class CrimeListFragment extends Fragment {
      * @param resultCode
      * @param data
      */
-    @SuppressWarnings("AlibabaSwitchStatement")
     @Override
     public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -152,6 +158,83 @@ public class CrimeListFragment extends Fragment {
         outState.putBoolean(STATE_IS_SUBTITLE_VISIBLE_KEY, mIsSubtitleVisible);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        updateUI();
+    }
+
+    @Override
+    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        inflater.inflate(R.menu.fragment_crime_list, menu);
+        menu.findItem(R.id.show_subtitle_item_id).setTitle(mIsSubtitleVisible ? R.string.hide_subtitle : R.string.show_subtitle);
+    }
+
+    @Override
+    public void onPrepareOptionsMenu(@NonNull Menu menu) {
+        super.onPrepareOptionsMenu(menu);
+        updateSubtitle();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.new_crime_menu_item_id:
+                goToCreateNewCrimeActivity();
+                return true;
+            case R.id.show_subtitle_item_id:
+                mIsSubtitleVisible = !mIsSubtitleVisible;
+                this.updateSubtitle();
+                this.getActivity().invalidateOptionsMenu();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+
+    //MARK: Custom methods
+    private void updateSubtitle() {
+        int crimeCount = CrimeLab.get(getActivity()).getCrimeList().size();
+        String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural, crimeCount, crimeCount);
+        /* Учебник хочет, чтобы я кастил getActivity() (который возвращает FragmentActivity)
+        до AppCompatActivity, чтобы использовать getSupportActionBar() вместо Activity.getActionBar().
+        Не знаю, вызовет ли getActionBar() ошибку при исполнении, но проверим как-нибудь...*/
+        ((AppCompatActivity) getActivity())
+                .getSupportActionBar()
+                .setSubtitle(mIsSubtitleVisible ? subtitle : null);
+    }
+
+    //Самописный метод для обновления UI
+    private void updateUI() {
+        /*ИМЕННО ЗДЕСЬ МЫ ОБНОВЛЯЕМ RecyclerView. Уведомление Adapter.notifyDataSetChanged()
+         * вызывается прямо в adapter'e */
+        mCrimeHolderAdapter.setCrimeList(CrimeLab.get(getActivity()).getCrimeList());
+        //Если количество преступлений равно нулю, то показываем предложение создать первое преступление
+        mOnEmptyCrimeButtonContainer.setVisibility((this.mCrimeHolderAdapter.getItemCount() == 0 ? View.VISIBLE : View.INVISIBLE));
+        //Обновляем subtitle в соответствии с количеством преступлений
+        updateSubtitle();
+    }
+
+    private void goToCreateNewCrimeActivity() {
+        //Создаем новое преступление
+        Crime newCrime = new Crime();
+        CrimeLab.get(getActivity()).addCrime(newCrime);
+        Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
+        startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
+    }
+
+    public static CrimeListFragment newInstance(ArrayList<Crime> crimeList) {
+        Bundle args = new Bundle();
+        //Преобразовываем в обычный Java-массив, чтобы положить в args
+        args.putSerializable(ARG_ARRAY_LIST_KEY, crimeList);
+        CrimeListFragment fragment = new CrimeListFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     /**
      * Класс ячейки преступления. Внутри Holder'a имеется свойство itemView. Т.е. по сути ViewHolder
      * может обладать своей собственной логикой. Например, устанавливать внутри себя прослушивание event'ов и т.д.
@@ -159,7 +242,6 @@ public class CrimeListFragment extends Fragment {
     public class CrimeHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
 
         protected Crime mCrime;
-
         protected TextView mTitleTextView;
         protected TextView mDateTextView;
 
@@ -168,12 +250,10 @@ public class CrimeListFragment extends Fragment {
 
         public CrimeHolder(@NonNull View itemView) {
             super(itemView);
-
             mTitleTextView = itemView.findViewById(R.id.crime_title_id);
             mDateTextView = itemView.findViewById(R.id.crime_date_id);
             mCrimeSolvedImageView = itemView.findViewById(R.id.crime_solved_image_view_id);
 
-            //Добавляем действие по нажатии
             itemView.setOnClickListener(this);
         }
 
@@ -181,10 +261,9 @@ public class CrimeListFragment extends Fragment {
             mCrime = crime;
             mTitleTextView.setText(mCrime.getTitle());
 
-
             String dateString = "";
             dateString += DateFormat.getDateInstance().format(mCrime.getDate()) + ", ";
-            if (android.text.format.DateFormat.is24HourFormat(getContext())) {
+            if (android.text.format.DateFormat.is24HourFormat(this.itemView.getContext())) {
                 dateString += new SimpleDateFormat("H:mm").format(mCrime.getDate());
             } else {
                 dateString += new SimpleDateFormat("h:mm a").format(mCrime.getDate());
@@ -205,160 +284,42 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-//            System.out.println("AdapterPos: " + getAdapterPosition() + "; LayoutPos: " + getLayoutPosition());
-            Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), mCrime.getId(), getAdapterPosition(), false);
+            Intent i = CrimePagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
             startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
         }
     }
 
-    /**
-     * Более серьёзное предступление, ячейка которого имеет кнопку "Вызвать полицию"
-     */
-    public class SeriousCrimeHolder extends CrimeHolder {
+    public class CrimeHolderAdapter extends RecyclerView.Adapter<CrimeHolder> {
 
-        protected Button mCallPoliceButton;
-
-        public SeriousCrimeHolder(@NonNull View itemView) {
-            super(itemView);
-            mCallPoliceButton = itemView.findViewById(R.id.call_police_button_id);
-            mCallPoliceButton.setOnClickListener(mOnCallButtonTapped);
-        }
-
-        private final View.OnClickListener mOnCallButtonTapped = new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Toast t = Toast.makeText(getActivity(), getResources().getString(R.string.you_called_police_alert, (int) Math.round(Math.random() * 30 + 10)), Toast.LENGTH_SHORT);
-                t.setGravity(Gravity.TOP, 0, 60);
-                t.show();
-            }
-        };
-    }
-
-    /**
-     * Адаптер таблицы. Создает ячейки, выбирает, для кого какой макет использовать и т.д.
-     */
-    private class CrimeAdapter extends RecyclerView.Adapter<CrimeHolder> {
-
-        private List<Crime> mCrimeList;
-
-        /**
-         * Кастомный конструктор CrimeAdapter'a принимает на вход список преступлений
-         *
-         * @param crimeList
-         */
-        public CrimeAdapter(List<Crime> crimeList) {
+        //MARK: RecyclerView.Adapter implementation
+        private ArrayList<Crime> mCrimeList;
+        public void setCrimeList(ArrayList<Crime> crimeList) {
             mCrimeList = crimeList;
+            //Уведомляем RecyclerView прямо внутри Adapter'a
+            this.notifyDataSetChanged();
         }
 
-        /**
-         * Что мы тут делаем?
-         * Адаптер загружает представления ячеек таблицы. Метод выполняется столько раз, сколько нужно
-         * для непрерывного скроллинга. Метод onCreateViewHolder должен создать CrimeHolder,
-         * связать его с представлением и вернуть.
-         *
-         * @param parent
-         * @param viewType
-         * @return
-         */
+        /* Ответственное решение: адаптер принимает делегат на слушанье нажатий на ячейки */
+        public CrimeHolderAdapter(ArrayList<Crime> crimeList) {
+            this.mCrimeList = crimeList;
+        }
+
         @NonNull
         @Override
         public CrimeHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-
             LayoutInflater layoutInflater = LayoutInflater.from(getActivity());
-
-            //Если тип 0 (т.е. обычный), то создаем, как обычно
-            if (viewType == 0) {
-                View v = layoutInflater.inflate(R.layout.list_item_crime, parent, false);
-                return new CrimeHolder(v);
-            } else {
-                //Если преступление серьёзное (т.е. viewType == 1), то инициализируем SeriousCrimeHolder
-                View v = layoutInflater.inflate(R.layout.list_item_crime_serious, parent, false);
-                return new SeriousCrimeHolder(v);
-            }
-
+            View v = layoutInflater.inflate(R.layout.list_item_crime, parent, false);
+            return new CrimeHolder(v);
         }
+
         @Override
         public void onBindViewHolder(@NonNull CrimeHolder holder, int position) {
-            Crime crime = mCrimeList.get(position);
-            holder.bind(crime);
+            holder.bind(mCrimeList.get(position));
         }
 
-        //Определяет количество ячеек
         @Override
         public int getItemCount() {
-            mOnEmptyCrimeButtonContainer.setVisibility(mCrimeList.size() == 0 ? View.VISIBLE : View.INVISIBLE);
             return mCrimeList.size();
         }
-
-        //Метод, определяющий, какого типа является конкретная ячейка
-        @Override
-        public int getItemViewType(int position) {
-            return mCrimeList.get(position).isRequiresPolice() ? 1 : 0;
-        }
     }
-
-    @Override
-    public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
-        super.onCreateOptionsMenu(menu, inflater);
-        inflater.inflate(R.menu.fragment_crime_list,menu);
-        menu.findItem(R.id.show_subtitle_item_id).setTitle( mIsSubtitleVisible ? R.string.hide_subtitle : R.string.show_subtitle);
-    }
-
-    @Override
-    public void onPrepareOptionsMenu(@NonNull Menu menu) {
-        super.onPrepareOptionsMenu(menu);
-        updateSubtitle();
-    }
-    @Override
-    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        switch (item.getItemId()) {
-            case R.id.new_crime_menu_item_id:
-                goToCreateNewCrimeScene();
-                return true;
-            case R.id.show_subtitle_item_id:
-                mIsSubtitleVisible = !mIsSubtitleVisible;
-                this.updateSubtitle();
-                this.getActivity().invalidateOptionsMenu();
-                return true;
-            default:
-                return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private void updateSubtitle() {
-        int crimeCount = CrimeLab.get(getActivity()).getCrimeList().size();
-        String subtitle = getResources().getQuantityString(R.plurals.subtitle_plural, crimeCount, crimeCount);
-        /* Учебник хочет, чтобы я кастил getActivity() (который возвращает FragmentActivity)
-        до AppCompatActivity, чтобы использовать getSupportActionBar() вместо Activity.getActionBar().
-        Не знаю, вызовет ли getActionBar() ошибку при исполнении, но проверим как-нибудь...*/
-                ((AppCompatActivity) getActivity())
-                        .getSupportActionBar()
-                        .setSubtitle( mIsSubtitleVisible ? subtitle : null);
-    }
-    //    //Самописный метод для обновления UI
-//    private void updateUI() {
-//
-//        //Чтобы обновить UI заново достаем список преступлений
-//        List<Crime> crimeList = CrimeLab.get(getActivity()).getCrimeList();
-//        //Если адаптера еще нет (что наврядли, потому что он инициализируется в onCreateView),  то устанавливаем
-//        //Новый адаптер
-//        if (mCrimeRecyclerView.getAdapter() == null) {
-//            mCrimeRecyclerView.setAdapter(new CrimeAdapter(crimeList));
-//        } else {
-//            //В случае наличия адаптера (что скорее всего) просто уведомляем о том, что нужно перезагрудить ячейки
-//            mCrimeRecyclerView.getAdapter().notifyDataSetChanged();
-////            mCrimeRecyclerView.getAdapter().notifi
-//            //На самом деле лучше испльзовать .notifyItemChanged для выборочного обновления. Но в книге
-//            //пока что говорят сделать через общее обновление ячеек
-//        }
-//    }
-
-    private void goToCreateNewCrimeScene() {
-        //Создаем новое преступление
-        Crime newCrime = new Crime();
-        CrimeLab.get(getActivity()).addCrime(newCrime);
-        Intent i = CrimePagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
-        startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
-    }
-
 }

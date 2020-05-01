@@ -1,115 +1,147 @@
 package gghost.criminalintent.model;
 
+import android.content.ContentValues;
 import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 
+import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.UUID;
 
+import gghost.criminalintent.database.CrimeBaseHelper;
+import gghost.criminalintent.database.CrimeCursorWrapper;
+import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
+
 public class CrimeLab {
 
-    private List<Crime> mCrimeList;
-
     private static CrimeLab sInstance;
+    //Массив преступлений
 
+    private Context mContext;
+    private SQLiteDatabase mDatabase;
+
+    //Инициализатор
+    private CrimeLab(Context context) {
+        //Достаем глобальный контекст приложения
+        mContext = context.getApplicationContext();
+        //Инициализируем базу данных
+        mDatabase = new CrimeBaseHelper(mContext).getWritableDatabase();
+
+//        mCrimeList = new ArrayList<>();
+    }
+
+
+    //Публичные методы
     public static CrimeLab get(Context context) {
         if (sInstance == null) {
             sInstance = new CrimeLab(context);
         }
         return sInstance;
     }
+    public ArrayList<Crime> getCrimeList() {
 
-    public Hashtable<UUID, Integer> mIndexTable = new Hashtable<>();
+        ArrayList<Crime> crimeList = new ArrayList<>();
 
-    private CrimeLab(Context context) {
-        //
+        //два null обозначают "брать все!"
+        CrimeCursorWrapper cursorWrapper = queryCrimes(null, null);
+        try {
+            cursorWrapper.moveToFirst();
+            /* Свойство cursor.IsAfterLast() сообщает, что указатель вышел за пределы последней
+            * строки и сейчас указывает на пустоту. В цикле while мы говорим, что когда это произойдет
+            * цикл нужно завершить */
+            while (!cursorWrapper.isAfterLast()) {
+                /* Каждый раз, когда мы двигаемся вперед .moveToNext(), cursor начинает указывать
+                * на новую строку, и, следовательно, мы получим другой объект при вызове метода
+                * cursor.getCrime() */
+                crimeList.add(cursorWrapper.getCrime());
+                cursorWrapper.moveToNext();
+            }
+        } finally {
+            //Зачем-то вызывется cursor.close(). Наверное, это освобождает память
 
-        mCrimeList = new ArrayList<>();
-
-        for (int i = 0; i < 0; i++) {
-            Crime newCrime = new Crime();
-            newCrime.setTitle("Crime #" + (i + 1) + "....................");
-            newCrime.setDate(new Date());
-            newCrime.setSolved((int) Math.round(Math.random()) == 1);
-            newCrime.setRequiresPolice((int) Math.round(Math.random()) == 1);
-
-            //newCrime
-            mIndexTable.put(newCrime.getId(), i);
-
-            mCrimeList.add(newCrime);
+            /* В книге написано, что если не закрывать курсоры, то могут закончиться файловые
+            * дескрипторы, что бы это не значило. По инфе из интернета файловый дескриптор - это
+            * неотрицательное число, являющееся идентефикатром потока данных (inout). Типа как порт. */
+            cursorWrapper.close();
         }
-    }
 
-    public List<Crime> getCrimeList() {
-        return this.mCrimeList;
+        return crimeList;
     }
-
     public Crime getCrime(UUID uuid) {
 
-        if (mIndexTable.get(uuid) != null) {
-            return mCrimeList.get(mIndexTable.get(uuid));
-        } else {
-            return null;
+        CrimeCursorWrapper crimeCursor = queryCrimes(
+                CrimeTable.Cols.UUID + " = ?",
+                new String[]{uuid.toString()});
+
+        try {
+            //Если из базы данных ничего не найдено
+            if (crimeCursor.getCount() == 0) {
+                return null;
+            } else {
+                //По идеи по uuid мы должны получить только одну строку, поэтому идем
+                //К первому попавшемуся и возвращаем его
+                crimeCursor.moveToFirst();
+                return crimeCursor.getCrime();
+            }
+        } finally {
+            //Не забываем закрывать курсоры
+            crimeCursor.close();
         }
-
-//        for (Crime crime : this.mCrimeList) {
-//            if (crime.getId().equals(uuid)) {
-//                return crime;
-//            }
-//        }
-//        return null;
     }
-
     public void addCrime(Crime c) {
-        this.mCrimeList.add(c);
-        this.indexCrime(c);
+        ContentValues values = getContentValues(c);
+        mDatabase.insertOrThrow(CrimeTable.NAME,null,values);
     }
-
     public void deleteCrime(UUID crimeId) {
-
-        System.out.println("asdf: " + mIndexTable);
-
-        //Удаляем по айди
-        //Нужно достать индекс и удалить по индексу, после чего обновить всех, кто после
-        if (mIndexTable.get(crimeId) != null) {
-            //достали индекс по ID
-            int index = mIndexTable.get(crimeId);
-
-            //Удаляем из хранилища
-            mCrimeList.remove(index);
-
-            //Теперь удаляем индексирование
-            mIndexTable.remove(crimeId);
-
-            //Обновить индексы справа от элемента
-            for (int i = index; i <= mCrimeList.size() - 1; i++) {
-                System.out.println(i);
-                /* Для всех элементов, которые стояли после удаленного элемента
-                нужно обновить индексирование, потому что индекс устарел, т.к. на единицу больше */
-                mIndexTable.put(mCrimeList.get(i).getId(),i);
-            }
-
-        } else {
-            //не делаем ничего
-        }
+        mDatabase.delete(
+                CrimeTable.NAME,
+                CrimeTable.Cols.UUID + " = ?",
+                new String[] {crimeId.toString()});
+    }
+    public void updateCrime(Crime crime) {
+        /*
+        Конструкция update принимает:
+        1) Имя таблицы, чтобы определить, куда вставлять
+        2) Объект класса ContentValues, чтобы определить, что вставлять
+        3) логическое выражение, которое будет вставлено в запрос после ключегого "where"
+        4) Массив параметров, которые будут вставляться вапрос вместо знаков вопроса (?)
+        Аргументы не вставляются в логическое выражение напрямую, а передаются через массив строк
+        во избежание SQL-инъекций
+         */
+        mDatabase.update(
+                CrimeTable.NAME,
+                getContentValues(crime),
+                CrimeTable.Cols.UUID + " = ?",
+                new String[] {crime.getId().toString()});
 
     }
 
-    private void indexCrime(Crime c) {
-        for (int i = 0; i < mCrimeList.size(); i++) {
-            if (c.getId().equals(mCrimeList.get(i).getId())) {
-                mIndexTable.put(c.getId(), i);
-                return;
-            }
-        }
+
+    //Метод для преобразования объекта Java в строку таблицы
+    private static ContentValues getContentValues(Crime crime) {
+        ContentValues values = new ContentValues();
+
+        values.put(CrimeTable.Cols.TITLE, crime.getTitle());
+        values.put(CrimeTable.Cols.UUID,crime.getId().toString());
+        values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
+        values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
+
+        return values;
     }
-    private void reindexList() {
-        for (Crime c :
-                mCrimeList) {
-            indexCrime(c);
-        }
+    private CrimeCursorWrapper queryCrimes(String whereClause, String[] whereArgs) {
+        Cursor cursor = mDatabase.query(
+                CrimeTable.NAME,
+                null,whereClause,
+                whereArgs,
+                null,
+                null,
+                null);
+
+        return new CrimeCursorWrapper(cursor);
     }
+
 
 }
