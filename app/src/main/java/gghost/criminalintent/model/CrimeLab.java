@@ -124,6 +124,7 @@ public class CrimeLab {
         values.put(CrimeTable.Cols.TITLE, crime.getTitle());
         values.put(CrimeTable.Cols.UUID,crime.getId().toString());
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
+        //TODO: вернуть на место isSolved
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
         values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
 

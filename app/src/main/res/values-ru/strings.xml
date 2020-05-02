@@ -49,4 +49,6 @@
 	
 	<string name="choose_app_to_share">Чем будем наказывать:</string>
 	
+	<string name="read_contacts_permission_reason">Нам просто нужно знать имя преступника.</string>
+	
 </resources>

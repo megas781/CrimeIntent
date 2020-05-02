@@ -1,15 +1,21 @@
 package gghost.criminalintent.crime_detail;
 
+import android.Manifest;
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract;
+import android.provider.ContactsContract.CommonDataKinds;
+import android.provider.ContactsContract.Contacts;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -20,14 +26,17 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -46,6 +55,7 @@ public class CrimeDetailFragment extends Fragment {
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
     private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
     private static final int PICK_CONTACT_REQUEST_CODE = 2;
+    private static final int READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE = 10;
 
     private static final int MENU_ITEM_DELETE_CRIME_ID = 1;
 
@@ -57,7 +67,7 @@ public class CrimeDetailFragment extends Fragment {
     private CheckBox mIsSolvedCheckbox;
     private Button mChooseSuspectButton;
     private Button mReportCrimeButton;
-
+    private Button mCallCriminalButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -103,7 +113,7 @@ public class CrimeDetailFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
-        View v = inflater.inflate(R.layout.fragment_crime, container, false);
+        View v = inflater.inflate(R.layout.fragment_crime_detail, container, false);
 
         mDateButton = v.findViewById(R.id.crime_date_button);
         mDateButton.setOnClickListener(onDateButtonClickListener);
@@ -121,48 +131,84 @@ public class CrimeDetailFragment extends Fragment {
         mReportCrimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                /* Создаем неявный интент */
-                Intent i = new Intent(Intent.ACTION_SEND);
-                //Указываем MIME type, а Android сам решит, какие приложения могут захендлить этот Intent
-                i.setType("text/plain");
-                i.putExtra(Intent.EXTRA_TEXT,getCrimeReport());
-                i.putExtra(Intent.EXTRA_SUBJECT, R.string.crime_report_subject);
-                /* Странно, но чтобы указать надпись при выборе приложения, нужно
-                * воспользоваться методом Intent.createChooser(Intent, String) */
-                //                i = Intent.createChooser(i, getString(R.string.choose_app_to_share));
+//                /* Создаем неявный интент */
+//                Intent i = new Intent(Intent.ACTION_SEND);
+//                //Указываем MIME type, а Android сам решит, какие приложения могут захендлить этот Intent
+//                i.setType("text/plain");
+//                i.putExtra(Intent.EXTRA_TEXT,getCrimeReport());
+//                i.putExtra(Intent.EXTRA_SUBJECT, R.string.crime_report_subject);
+//                /* Странно, но чтобы указать надпись при выборе приложения, нужно
+//                * воспользоваться методом Intent.createChooser(Intent, String) */
+//                //i = Intent.createChooser(i, getString(R.string.choose_app_to_share));
+//                startActivity(i);
+
+                Intent i = ShareCompat.IntentBuilder.from(getActivity())
+                        .setType("text/plain")
+                        .setText(getCrimeReport())
+                        .setSubject(getString(R.string.crime_report_subject))
+                        .setChooserTitle(R.string.choose_app_to_share)
+                        .getIntent();
                 startActivity(i);
 
             }
         });
 
+
+        //ВЫБОР ПОДОЗРЕВАЕМОГО
         mChooseSuspectButton = v.findViewById(R.id.choose_suspect_button_id);
+        //Устанавливаем значение для кнопки, если оно есть
         if (mCrime.getSuspect() != null) {
             mChooseSuspectButton.setText(mCrime.getSuspect());
         }
 
-        final Intent pickContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
-//        pickContactIntent.addCategory(Intent.CATEGORY_APP_MAPS);
-
+        /* TODO: не знаю решения, как обойтись только одним Intent'ом. Пока приходится создавать его
+         *   и тут и там */
+        //Intent для на открытие приложения контактов с последующим выбором контакта
+        Intent pickContactIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
         /* Нужно сделать проверку на то, есть ли у операционной системы компонент для обработки
          * запроса контакта. PackageManager – это такой подопечный Android'a, который знает всё обо всех.
          * У него можно спросить, существует ли на устройстве такая активность, которая обработает данный интент.
          * Так же мы можем отфильтровать поиск активностей по категориям, чтобы искались только активности
          * под категорией DEFAULT*/
-        PackageManager packageManager = getActivity().getPackageManager();
-        ResolveInfo info = packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY);
         //Если данные об обработчике интента не найдены, то кнопка блокируется
-        mChooseSuspectButton.setEnabled(info != null);
+        if (getActivity().getPackageManager().resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY) == null) {
+            mChooseSuspectButton.setEnabled(false);
+        } else {
+            //Если приложение-обработчик существует, то добавляем слушатель
+            mChooseSuspectButton.setOnClickListener(onChooseCriminalButtonClickListener);
+        }
 
-        mChooseSuspectButton.setOnClickListener(new View.OnClickListener() {
+        //по-моему бесполезная строка
+//        ((AppCompatActivity) Objects.requireNonNull(this.getActivity())).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
+        mCallCriminalButton = v.findViewById(R.id.call_criminal_button_id);
+        mCallCriminalButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST_CODE);
+                //TODO: Здесь нужно позвонить преступнику
+
+//                ContentResolver resolver = getActivity().getContentResolver();
+////                String[] proj = new String[]{
+////                        Contacts.DISPLAY_NAME,
+////                        Contacts._ID,
+////                        CommonDataKinds.Phone.NUMBER
+////                };
+//                Cursor contactsCursor = resolver.query(CommonDataKinds.Phone.CONTENT_URI, null, CommonDataKinds.Phone._ID + " = ?", new String[]{"58"}, null);
+//
+//                System.out.println();
+//                contactsCursor.moveToFirst();
+//                while (!contactsCursor.isAfterLast()) {
+//                    String name = contactsCursor.getString(0);
+//                    String id = contactsCursor.getString(1);
+//                    String phoneNumber = contactsCursor.getString(2);
+//                    System.out.println(name + " (" + id + ") – " + phoneNumber);
+//                    contactsCursor.moveToNext();
+//                }
+//                System.out.println();
+
             }
         });
 
-
-
-        ((AppCompatActivity) Objects.requireNonNull(this.getActivity())).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (mIsNew) {
             mTitleTextField.requestFocus();
@@ -174,6 +220,7 @@ public class CrimeDetailFragment extends Fragment {
 
         return v;
     }
+
 
     /**
      * обработчик данных от потомков
@@ -205,31 +252,56 @@ public class CrimeDetailFragment extends Fragment {
             case PICK_CONTACT_REQUEST_CODE:
 
                 if (data != null) {
-
                     Uri contactUri = data.getData();
+                    ContentResolver resolver = getActivity().getContentResolver();
 
                     /* Определение полей, которые должны быть возвращены запросом */
-                    String[] queryFields = new String[] {
-                       ContactsContract.Contacts.DISPLAY_NAME
-                    };
-
+                    String[] queryFields = new String[]{Contacts.DISPLAY_NAME, Contacts._ID};
                     /* Выполнение запроса по URI */
-                    Cursor c = getActivity().getContentResolver().query(contactUri,queryFields,null,null, null);
-                    try {
-                        if (c.getCount() == 0) {
-                            return;
-                        } else {
+                    Cursor c = resolver.query(contactUri, queryFields, null, null, null);
+                    if (c.getCount() != 0) {
+                        //Извлечение столбца из списка подозреваемых
+                        c.moveToFirst();
+                        String suspectString = c.getString(c.getColumnIndex(Contacts.DISPLAY_NAME));
+                        mCrime.setSuspect(suspectString);
+                        mChooseSuspectButton.setText(mCrime.getSuspect());
 
-                            //Извлечение столбца из списка подозреваемых
-                            c.moveToFirst();
-                            String suspectString = c.getString(0);
-                            mCrime.setSuspect(suspectString);
-                            mChooseSuspectButton.setText(mCrime.getSuspect());
-                        }
-                    } finally {
-                        c.close();
+
+                        /* А теперь я по Id контакта хочу достать его номер телефона */
+                        String contactId = c.getString(c.getColumnIndex(Contacts._ID));
+                        //Создаем запрос на данные о контакте с данным ID
+                        Cursor dataCursor = resolver.query(CommonDataKinds.Phone.CONTENT_URI, new String[]{
+                                CommonDataKinds.Phone.NUMBER,
+                                CommonDataKinds.Phone.CONTACT_ID
+                        }, CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
+
+                        dataCursor.moveToFirst();
+
+                        System.out.println("phone number: " + dataCursor.getString(dataCursor.getColumnIndex(CommonDataKinds.Phone.NUMBER)));
+                        dataCursor.close();
+                    } else {
+
                     }
 
+
+                    c.close();
+                }
+                break;
+            default:
+                break;
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        switch (requestCode) {
+            case READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE:
+                //Так как мы знаем, что мы запрашивали только одно разрешение, можем догадаться
+                //Что в GrantResults только одно число, определяющее статус разрешения на чтение контактов
+                if (grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    //Снова вызываем слушателя, чтобы уже отобразить выбор контакта
+                    mChooseSuspectButton.callOnClick();
                 }
                 break;
             default:
@@ -299,11 +371,51 @@ public class CrimeDetailFragment extends Fragment {
 
         }
     };
+    private final View.OnClickListener onChooseCriminalButtonClickListener = new View.OnClickListener() {
+        @Override
+        public void onClick(View v) {
+
+            Intent pickContactIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+
+            //Проверяем, есть ли доступ к контактам
+            if (getActivity().checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED) {
+                //У нас есть доступ к контактам, значит просто выполняем request
+                startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST_CODE);
+            } else {
+                //Просим доступ к контактам
+                if (shouldShowRequestPermissionRationale(Manifest.permission.READ_CONTACTS)) {
+
+                    TextView alertText = new TextView(getActivity());
+                    alertText.setPadding(16, 16, 16, 16);
+                    alertText.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+                    alertText.setTextSize(TypedValue.COMPLEX_UNIT_SP, 20);
+                    alertText.setText(R.string.read_contacts_permission_reason);
+
+                    new AlertDialog.Builder(getActivity())
+                            .setView(alertText)
+                            .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE);
+                                }
+                            })
+                            .setNegativeButton(android.R.string.no, null)
+                            .show();
+                } else {
+                    //Если по каким-то причинам OS не считает нужным объяснение причины разрешения,
+                    //в таком случае просто просим разрешения
+                    requestPermissions(new String[]{Manifest.permission.READ_CONTACTS}, READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE);
+                }
+
+            }
+
+        }
+    };
 
     @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
-        menu.add(Menu.NONE, MENU_ITEM_DELETE_CRIME_ID,Menu.NONE,R.string.delete_crime);
+        menu.add(Menu.NONE, MENU_ITEM_DELETE_CRIME_ID, Menu.NONE, R.string.delete_crime);
     }
 
     @Override
@@ -314,10 +426,9 @@ public class CrimeDetailFragment extends Fragment {
                 getActivity().finish();
                 return true;
             default:
-        return super.onOptionsItemSelected(item);
+                return super.onOptionsItemSelected(item);
         }
     }
-
 
 
     private void updateUI() {
@@ -329,8 +440,9 @@ public class CrimeDetailFragment extends Fragment {
             df = new SimpleDateFormat("HH:mm", new Locale("ru"));
             mTimeButton.setText(df.format(mCrime.getDate()));
             mIsSolvedCheckbox.setChecked(mCrime.isSolved());
+
         } else {
-            System.out.println("атас! mCrime == null");
+            throw new NullPointerException("mCrime == null у CrimeDetailFragment");
         }
 
     }

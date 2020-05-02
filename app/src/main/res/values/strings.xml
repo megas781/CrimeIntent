@@ -48,4 +48,6 @@
 	
 	<string name="choose_app_to_share">Choose app to share:</string>
 	
+	<string name="read_contacts_permission_reason">We just need to now crimer\'s name.</string>
+	
 </resources>
