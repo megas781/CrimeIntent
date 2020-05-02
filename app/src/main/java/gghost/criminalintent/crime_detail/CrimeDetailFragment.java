@@ -34,6 +34,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ShareCompat;
 import androidx.fragment.app.Fragment;
 
+import java.net.URI;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -156,11 +157,6 @@ public class CrimeDetailFragment extends Fragment {
 
         //ВЫБОР ПОДОЗРЕВАЕМОГО
         mChooseSuspectButton = v.findViewById(R.id.choose_suspect_button_id);
-        //Устанавливаем значение для кнопки, если оно есть
-        if (mCrime.getSuspect() != null) {
-            mChooseSuspectButton.setText(mCrime.getSuspect());
-        }
-
         /* TODO: не знаю решения, как обойтись только одним Intent'ом. Пока приходится создавать его
          *   и тут и там */
         //Intent для на открытие приложения контактов с последующим выбором контакта
@@ -177,6 +173,10 @@ public class CrimeDetailFragment extends Fragment {
             //Если приложение-обработчик существует, то добавляем слушатель
             mChooseSuspectButton.setOnClickListener(onChooseCriminalButtonClickListener);
         }
+        //Устанавливаем значение для кнопки, если оно есть
+        if (mCrime.getSuspect() != null) {
+            mChooseSuspectButton.setText(mCrime.getSuspect());
+        }
 
         //по-моему бесполезная строка
 //        ((AppCompatActivity) Objects.requireNonNull(this.getActivity())).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -186,26 +186,8 @@ public class CrimeDetailFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 //TODO: Здесь нужно позвонить преступнику
-
-//                ContentResolver resolver = getActivity().getContentResolver();
-////                String[] proj = new String[]{
-////                        Contacts.DISPLAY_NAME,
-////                        Contacts._ID,
-////                        CommonDataKinds.Phone.NUMBER
-////                };
-//                Cursor contactsCursor = resolver.query(CommonDataKinds.Phone.CONTENT_URI, null, CommonDataKinds.Phone._ID + " = ?", new String[]{"58"}, null);
-//
-//                System.out.println();
-//                contactsCursor.moveToFirst();
-//                while (!contactsCursor.isAfterLast()) {
-//                    String name = contactsCursor.getString(0);
-//                    String id = contactsCursor.getString(1);
-//                    String phoneNumber = contactsCursor.getString(2);
-//                    System.out.println(name + " (" + id + ") – " + phoneNumber);
-//                    contactsCursor.moveToNext();
-//                }
-//                System.out.println();
-
+                Intent callIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mCrime.getPhoneNumber()));
+                startActivity(callIntent);
             }
         });
 
@@ -270,15 +252,23 @@ public class CrimeDetailFragment extends Fragment {
                         /* А теперь я по Id контакта хочу достать его номер телефона */
                         String contactId = c.getString(c.getColumnIndex(Contacts._ID));
                         //Создаем запрос на данные о контакте с данным ID
-                        Cursor dataCursor = resolver.query(CommonDataKinds.Phone.CONTENT_URI, new String[]{
+                        Cursor phoneCursor = resolver.query(CommonDataKinds.Phone.CONTENT_URI, new String[]{
                                 CommonDataKinds.Phone.NUMBER,
                                 CommonDataKinds.Phone.CONTACT_ID
                         }, CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[]{contactId}, null);
 
-                        dataCursor.moveToFirst();
+                        if (phoneCursor.getCount() > 0) {
+                            phoneCursor.moveToFirst();
+                            String derivedPhoneNumber = phoneCursor.getString(phoneCursor.getColumnIndex(CommonDataKinds.Phone.NUMBER));
+                            System.out.println("derived phone number: " + derivedPhoneNumber);
+                            mCrime.setPhoneNumber(derivedPhoneNumber);
+                        } else {
+                            //если нет номера, то обнуляем его в mCrime
+                            mCrime.setPhoneNumber(null);
+                        }
 
-                        System.out.println("phone number: " + dataCursor.getString(dataCursor.getColumnIndex(CommonDataKinds.Phone.NUMBER)));
-                        dataCursor.close();
+                        mCallCriminalButton.setVisibility(mCrime.getPhoneNumber() != null ? View.VISIBLE : View.GONE);
+                        phoneCursor.close();
                     } else {
 
                     }
@@ -440,6 +430,7 @@ public class CrimeDetailFragment extends Fragment {
             df = new SimpleDateFormat("HH:mm", new Locale("ru"));
             mTimeButton.setText(df.format(mCrime.getDate()));
             mIsSolvedCheckbox.setChecked(mCrime.isSolved());
+            mCallCriminalButton.setVisibility(mCrime.getPhoneNumber() != null ? View.VISIBLE : View.GONE);
 
         } else {
             throw new NullPointerException("mCrime == null у CrimeDetailFragment");

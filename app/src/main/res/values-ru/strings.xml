@@ -38,7 +38,7 @@
 	
 	<string name="there_are_no_crimes_yet">Еще не зафиксировано никаких претуплений</string>
 	<string name="crime_choose_suspect_label">Указать подозреваемого</string>
-	<string name="report_crime_label">Рассказать об преступлении</string>
+	<string name="report_crime_label">Рассказать о преступлении</string>
 	<string name="crime_report_solved">Преступник уже наказан</string>
 	<string name="crime_report_unsolved">Преступник еще не наказан</string>
 	<string name="crime_report_no_suspect">подозреваемых не обнаружено</string>

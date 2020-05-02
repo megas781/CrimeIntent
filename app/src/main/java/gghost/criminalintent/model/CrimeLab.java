@@ -127,6 +127,7 @@ public class CrimeLab {
         //TODO: вернуть на место isSolved
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
         values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
+        values.put(CrimeTable.Cols.PHONE_NUMBER, crime.getPhoneNumber());
 
         return values;
     }

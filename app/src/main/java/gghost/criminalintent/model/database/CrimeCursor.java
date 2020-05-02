@@ -33,6 +33,7 @@ public class CrimeCursor extends CursorWrapper {
         long date = getLong(this.getColumnIndex(CrimeTable.Cols.DATE));
         int isSolved = getInt(getColumnIndex(CrimeTable.Cols.SOLVED));
         String suspect = getString(getColumnIndex(CrimeTable.Cols.SUSPECT));
+        String phoneNumber = getString(getColumnIndex(CrimeTable.Cols.PHONE_NUMBER));
         /*
         Создаем экземпляр Crime по данным, которые достали
          */
@@ -41,6 +42,7 @@ public class CrimeCursor extends CursorWrapper {
         crime.setDate(new Date(date));
         crime.setSolved(isSolved != 0);
         crime.setSuspect(suspect);
+        crime.setPhoneNumber(phoneNumber);
 
         return crime;
     }

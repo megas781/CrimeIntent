@@ -27,7 +27,8 @@ public class CrimeDatabaseBuilder extends SQLiteOpenHelper {
                 "%3$s," + //title
                 "%4$s," + //date
                 "%5$s," + //solved
-                "%6$s" + //suspect
+                "%6$s," + //suspect
+                "%7$s" + //phone number
                 ")";
 
         db.execSQL(String.format(createTableQuery,
@@ -36,7 +37,8 @@ public class CrimeDatabaseBuilder extends SQLiteOpenHelper {
                 CrimeTable.Cols.TITLE,
                 CrimeTable.Cols.DATE,
                 CrimeTable.Cols.SOLVED,
-                CrimeTable.Cols.SUSPECT));
+                CrimeTable.Cols.SUSPECT,
+                CrimeTable.Cols.PHONE_NUMBER));
     }
 
     /**

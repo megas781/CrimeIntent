@@ -16,6 +16,7 @@ public class Crime implements Serializable {
 
     @Nullable
     private String mSuspect;
+    private String mPhoneNumber;
 
     public UUID getId() {
         return mId;
@@ -44,6 +45,13 @@ public class Crime implements Serializable {
     }
     public void setSuspect(@Nullable String suspect) {
         mSuspect = suspect;
+    }
+    @Nullable
+    public String getPhoneNumber() {
+        return mPhoneNumber;
+    }
+    public void setPhoneNumber(String phoneNumber) {
+        mPhoneNumber = phoneNumber;
     }
 
     public Crime() {
