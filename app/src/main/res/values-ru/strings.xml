@@ -39,4 +39,14 @@
 	<string name="there_are_no_crimes_yet">Еще не зафиксировано никаких претуплений</string>
 	<string name="crime_choose_suspect_label">Указать подозреваемого</string>
 	<string name="report_crime_label">Рассказать об преступлении</string>
+	<string name="crime_report_solved">Преступник уже наказан</string>
+	<string name="crime_report_unsolved">Преступник еще не наказан</string>
+	<string name="crime_report_no_suspect">подозреваемых не обнаружено</string>
+	<string name="crime_report_suspect">подозреваемый – %1$s</string>
+	<string name="crime_report_subject">Отчет о преступлении</string>
+	<string name="send_report">Отправить отчет с помощью...</string>
+	<string name="crime_report">%1$s! Преступление обнаружено %2$s. %3$s, %4$s.</string>
+	
+	<string name="choose_app_to_share">Чем будем наказывать:</string>
+	
 </resources>

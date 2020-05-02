@@ -8,9 +8,9 @@ import android.database.sqlite.SQLiteDatabase;
 import java.util.ArrayList;
 import java.util.UUID;
 
-import gghost.criminalintent.database.CrimeDatabaseBuilder;
-import gghost.criminalintent.database.CrimeCursor;
-import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
+import gghost.criminalintent.model.database.CrimeDatabaseBuilder;
+import gghost.criminalintent.model.database.CrimeCursor;
+import gghost.criminalintent.model.database.CrimeDbSchema.CrimeTable;
 
 public class CrimeLab {
 

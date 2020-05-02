@@ -1,4 +1,4 @@
-package gghost.criminalintent.database;
+package gghost.criminalintent.model.database;
 
 import android.database.Cursor;
 import android.database.CursorWrapper;
@@ -6,7 +6,7 @@ import android.database.CursorWrapper;
 import java.util.Date;
 import java.util.UUID;
 
-import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
+import gghost.criminalintent.model.database.CrimeDbSchema.CrimeTable;
 import gghost.criminalintent.model.Crime;
 
 /**

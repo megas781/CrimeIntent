@@ -2,7 +2,12 @@ package gghost.criminalintent.crime_detail;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -40,6 +45,7 @@ public class CrimeDetailFragment extends Fragment {
     //Код для TargetFragment'a
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
     private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
+    private static final int PICK_CONTACT_REQUEST_CODE = 2;
 
     private static final int MENU_ITEM_DELETE_CRIME_ID = 1;
 
@@ -49,6 +55,9 @@ public class CrimeDetailFragment extends Fragment {
     private Button mDateButton;
     private Button mTimeButton;
     private CheckBox mIsSolvedCheckbox;
+    private Button mChooseSuspectButton;
+    private Button mReportCrimeButton;
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -108,6 +117,51 @@ public class CrimeDetailFragment extends Fragment {
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
         mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
 
+        mReportCrimeButton = v.findViewById(R.id.report_crime_button_id);
+        mReportCrimeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /* Создаем неявный интент */
+                Intent i = new Intent(Intent.ACTION_SEND);
+                //Указываем MIME type, а Android сам решит, какие приложения могут захендлить этот Intent
+                i.setType("text/plain");
+                i.putExtra(Intent.EXTRA_TEXT,getCrimeReport());
+                i.putExtra(Intent.EXTRA_SUBJECT, R.string.crime_report_subject);
+                /* Странно, но чтобы указать надпись при выборе приложения, нужно
+                * воспользоваться методом Intent.createChooser(Intent, String) */
+                //                i = Intent.createChooser(i, getString(R.string.choose_app_to_share));
+                startActivity(i);
+
+            }
+        });
+
+        mChooseSuspectButton = v.findViewById(R.id.choose_suspect_button_id);
+        if (mCrime.getSuspect() != null) {
+            mChooseSuspectButton.setText(mCrime.getSuspect());
+        }
+
+        final Intent pickContactIntent = new Intent(Intent.ACTION_PICK, ContactsContract.Contacts.CONTENT_URI);
+//        pickContactIntent.addCategory(Intent.CATEGORY_APP_MAPS);
+
+        /* Нужно сделать проверку на то, есть ли у операционной системы компонент для обработки
+         * запроса контакта. PackageManager – это такой подопечный Android'a, который знает всё обо всех.
+         * У него можно спросить, существует ли на устройстве такая активность, которая обработает данный интент.
+         * Так же мы можем отфильтровать поиск активностей по категориям, чтобы искались только активности
+         * под категорией DEFAULT*/
+        PackageManager packageManager = getActivity().getPackageManager();
+        ResolveInfo info = packageManager.resolveActivity(pickContactIntent, PackageManager.MATCH_DEFAULT_ONLY);
+        //Если данные об обработчике интента не найдены, то кнопка блокируется
+        mChooseSuspectButton.setEnabled(info != null);
+
+        mChooseSuspectButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivityForResult(pickContactIntent, PICK_CONTACT_REQUEST_CODE);
+            }
+        });
+
+
+
         ((AppCompatActivity) Objects.requireNonNull(this.getActivity())).getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         if (mIsNew) {
@@ -132,6 +186,7 @@ public class CrimeDetailFragment extends Fragment {
                 if (resultCode == Activity.RESULT_OK) {
                     if (data != null) {
                         mCrime.setDate(DatePickerActivity.fetchDateFromIntent(data));
+
                     } else {
                         throw new NullPointerException("No data from datePickerFragment, but expected");
                     }
@@ -147,6 +202,36 @@ public class CrimeDetailFragment extends Fragment {
                     }
                 }
                 updateUI();
+            case PICK_CONTACT_REQUEST_CODE:
+
+                if (data != null) {
+
+                    Uri contactUri = data.getData();
+
+                    /* Определение полей, которые должны быть возвращены запросом */
+                    String[] queryFields = new String[] {
+                       ContactsContract.Contacts.DISPLAY_NAME
+                    };
+
+                    /* Выполнение запроса по URI */
+                    Cursor c = getActivity().getContentResolver().query(contactUri,queryFields,null,null, null);
+                    try {
+                        if (c.getCount() == 0) {
+                            return;
+                        } else {
+
+                            //Извлечение столбца из списка подозреваемых
+                            c.moveToFirst();
+                            String suspectString = c.getString(0);
+                            mCrime.setSuspect(suspectString);
+                            mChooseSuspectButton.setText(mCrime.getSuspect());
+                        }
+                    } finally {
+                        c.close();
+                    }
+
+                }
+                break;
             default:
                 break;
         }
@@ -253,8 +338,10 @@ public class CrimeDetailFragment extends Fragment {
     @NonNull
     private String getCrimeReport() {
         String solvedString = mCrime.isSolved() ? getString(R.string.crime_report_solved) : getString(R.string.crime_report_unsolved);
-//        String DateFor
-        return null;
+        String dateString = new SimpleDateFormat().format(mCrime.getDate());
+        String suspectString = mCrime.getSuspect() == null ? getString(R.string.crime_report_no_suspect) : mCrime.getSuspect();
+        String reportString = getString(R.string.crime_report, mCrime.getTitle(), dateString, solvedString, suspectString);
+        return reportString;
     }
 
 

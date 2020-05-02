@@ -1,10 +1,10 @@
-package gghost.criminalintent.database;
+package gghost.criminalintent.model.database;
 
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
-import gghost.criminalintent.database.CrimeDbSchema.CrimeTable;
+import gghost.criminalintent.model.database.CrimeDbSchema.CrimeTable;
 
 public class CrimeDatabaseBuilder extends SQLiteOpenHelper {
 

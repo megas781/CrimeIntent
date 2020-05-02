@@ -1,4 +1,4 @@
-package gghost.criminalintent.database;
+package gghost.criminalintent.model.database;
 
 public class CrimeDbSchema {
     public static final class CrimeTable {
