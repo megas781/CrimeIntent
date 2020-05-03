@@ -7,12 +7,13 @@ import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.ContactsContract;
 import android.provider.ContactsContract.CommonDataKinds;
 import android.provider.ContactsContract.Contacts;
+import android.provider.MediaStore;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.TypedValue;
@@ -26,18 +27,20 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ShareCompat;
+import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
-import java.net.URI;
+import java.io.File;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.UUID;
@@ -50,18 +53,21 @@ public class CrimeDetailFragment extends Fragment {
 
     private static final String ARG_CRIME_ID_KEY = "ARG_CRIME_ID_KEY";
     private static final String ARG_IS_NEW_KEY = "ARG_IS_NEW_KEY";
-    //Тег для FragmentManager'a
-//    private static final String DATE_PICKER_FRAGMENT_TAG = "DATE_PICKER_FRAGMENT_TAG";
     //Код для TargetFragment'a
-    private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0;
-    private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1;
-    private static final int PICK_CONTACT_REQUEST_CODE = 2;
-    private static final int READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE = 10;
+    private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0; //Explicit Intent
+    private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1; //Explicit Intent
 
-    private static final int MENU_ITEM_DELETE_CRIME_ID = 1;
+    private static final int PICK_CONTACT_REQUEST_CODE = 2; //Implicit Intent
+    private static final int CAPTURE_PHOTO_REQUEST_CODE = 3; //Implicit Intent
+
+    private static final int READ_CONTACTS_TO_PICK_CRIMINAL_PERMISSION_REQUEST_CODE = 10; //Permission accepted code
+
+    private static final int MENU_ITEM_DELETE_CRIME_ID = 1; //Code of menu item
 
     private Crime mCrime;
     private boolean mIsNew;
+    private File mPhotoFile;
+
     private EditText mTitleTextField;
     private Button mDateButton;
     private Button mTimeButton;
@@ -69,6 +75,8 @@ public class CrimeDetailFragment extends Fragment {
     private Button mChooseSuspectButton;
     private Button mReportCrimeButton;
     private Button mCallCriminalButton;
+    private ImageView mPhotoView;
+    private ImageButton mPhotoButton;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -91,6 +99,7 @@ public class CrimeDetailFragment extends Fragment {
         }
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
         mIsNew = getArguments().getBoolean(ARG_IS_NEW_KEY, false);
+        mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime);
 
         this.setHasOptionsMenu(true);
 
@@ -116,6 +125,55 @@ public class CrimeDetailFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         View v = inflater.inflate(R.layout.fragment_crime_detail, container, false);
 
+        mPhotoView = v.findViewById(R.id.crime_photo_id);
+
+
+
+        mPhotoButton = v.findViewById(R.id.crime_camera_button_id);
+        //Интент число для проверки возможности снимка
+        final Intent captureImageIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        //Intent.resolveActivity делает почти то же самое, что и packageManager.resolveActivity,
+        //только последний по-моему дает больше информации об активности, в отличие от Intent'овского
+        //который возвращает только имя пакета и имя класса(приложения)
+        boolean canTakePhoto = captureImageIntent.resolveActivity(getActivity().getPackageManager()) != null;
+        mPhotoButton.setEnabled(canTakePhoto);
+
+        mPhotoButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Создаем неявный интент для камеры
+                //Создаем путь для файла. Путь генерируется FileProvider'ом и преобразуется в Uri
+                //т.к. приложение работает только с этим типом данных
+                Uri newPhotoUri = FileProvider.getUriForFile(getActivity(),"gghost.criminalintent", mPhotoFile);
+                //Мы говорим интенту, куда сохранить данные фотографии, указывая ключом
+                //константу MediaStore.EXTRA_OUTPUT и кладя туда сгенерированный uri
+                captureImageIntent.putExtra(MediaStore.EXTRA_OUTPUT, newPhotoUri);
+
+                //метод queryIntentActivities круче чем resolveActivity. ResolveActivity просто выбирает
+                //одну активность, которая на взгляд ОС больше всего подходит для данного интента.
+                //А queryIntentActivities возвращает список из информаций обо всех активностях,
+                //способных захендлить intent.
+                //Thus, cameraActivities содержит инфу обо всех "камерных" активностях
+                List<ResolveInfo> cameraActivities = getActivity().getPackageManager().queryIntentActivities(captureImageIntent,PackageManager.MATCH_DEFAULT_ONLY);
+                //Но логично предположить, что каждому из этих активностей нужно единичное
+                //разрешение на запись в нашу файловую систему. Нужно им его подарить
+                for (ResolveInfo resolveInfo: cameraActivities) {
+                    /* TODO: почитать, чем отличается resolveInfo от activityInfo */
+                    /* Что я понял:
+                    * Активность может раздавать разовые разрешения (типа токены) на запись
+                    * в файловую систему. В методе grantUriPermission указывается, какому пакету
+                    * дается разрешение, далее нужно указать uri, в который активность будет записывать данные
+                    * и последним штрихоим нужно поставить флаг, какой тип разрешения дается:
+                    * FLAG_GRANT_READ_URI_PERMISSION или FLAG_GRANT_WRITE_URI_PERMISSION */
+                    //TODO: выяснить, почему камеры работают без разрешения. Код закомменчен специально
+                    //getActivity().grantUriPermission(resolveInfo.activityInfo.packageName, newPhotoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                }
+                //После того, как мы раздали единовременную возможность записывать всем возможным
+                //активностям, можно вызывать неявный интент
+                startActivityForResult(captureImageIntent, CAPTURE_PHOTO_REQUEST_CODE);
+            }
+        });
+
         mDateButton = v.findViewById(R.id.crime_date_button);
         mDateButton.setOnClickListener(onDateButtonClickListener);
 
@@ -132,17 +190,6 @@ public class CrimeDetailFragment extends Fragment {
         mReportCrimeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                /* Создаем неявный интент */
-//                Intent i = new Intent(Intent.ACTION_SEND);
-//                //Указываем MIME type, а Android сам решит, какие приложения могут захендлить этот Intent
-//                i.setType("text/plain");
-//                i.putExtra(Intent.EXTRA_TEXT,getCrimeReport());
-//                i.putExtra(Intent.EXTRA_SUBJECT, R.string.crime_report_subject);
-//                /* Странно, но чтобы указать надпись при выборе приложения, нужно
-//                * воспользоваться методом Intent.createChooser(Intent, String) */
-//                //i = Intent.createChooser(i, getString(R.string.choose_app_to_share));
-//                startActivity(i);
-
                 Intent i = ShareCompat.IntentBuilder.from(getActivity())
                         .setType("text/plain")
                         .setText(getCrimeReport())
@@ -160,7 +207,7 @@ public class CrimeDetailFragment extends Fragment {
         /* TODO: не знаю решения, как обойтись только одним Intent'ом. Пока приходится создавать его
          *   и тут и там */
         //Intent для на открытие приложения контактов с последующим выбором контакта
-        Intent pickContactIntent = new Intent(Intent.ACTION_PICK, Contacts.CONTENT_URI);
+        final Intent pickContactIntent = new Intent(Intent.ACTION_PICK);
         /* Нужно сделать проверку на то, есть ли у операционной системы компонент для обработки
          * запроса контакта. PackageManager – это такой подопечный Android'a, который знает всё обо всех.
          * У него можно спросить, существует ли на устройстве такая активность, которая обработает данный интент.
@@ -185,12 +232,11 @@ public class CrimeDetailFragment extends Fragment {
         mCallCriminalButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                //TODO: Здесь нужно позвонить преступнику
+                //Здесь нужно позвонить преступнику
                 Intent callIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + mCrime.getPhoneNumber()));
                 startActivity(callIntent);
             }
         });
-
 
         if (mIsNew) {
             mTitleTextField.requestFocus();

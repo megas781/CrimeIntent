@@ -54,6 +54,10 @@ public class Crime implements Serializable {
         mPhoneNumber = phoneNumber;
     }
 
+    public String getPhotoFilename() {
+        return "IMG_" + getId().toString() + ".jpg";
+    }
+
     public Crime() {
         /* Достаточно странная конструкция. Но в целом понятно. Мы обращяемся внутри одного конструктора
         * через "this" к другому */

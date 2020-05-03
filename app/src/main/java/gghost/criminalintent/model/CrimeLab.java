@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.UUID;
 
@@ -31,7 +32,7 @@ public class CrimeLab {
     }
 
 
-    //Публичные методы
+    //Публичные методы для работы с моделью Crime
     public static CrimeLab get(Context context) {
         if (sInstance == null) {
             sInstance = new CrimeLab(context);
@@ -116,6 +117,13 @@ public class CrimeLab {
 
     }
 
+    //Публичные методы для работы с фотографиями
+
+    //Этот метод не создает файлы, а просто возвращает по именам
+    public File getPhotoFile(Crime crime) {
+        File mFilesDir = mContext.getFilesDir();
+        return new File(mFilesDir,crime.getPhotoFilename());
+    }
 
     //Метод для преобразования объекта Java в строку таблицы
     private static ContentValues getContentValues(Crime crime) {
@@ -124,7 +132,6 @@ public class CrimeLab {
         values.put(CrimeTable.Cols.TITLE, crime.getTitle());
         values.put(CrimeTable.Cols.UUID,crime.getId().toString());
         values.put(CrimeTable.Cols.DATE, crime.getDate().getTime());
-        //TODO: вернуть на место isSolved
         values.put(CrimeTable.Cols.SOLVED, crime.isSolved() ? 1 : 0);
         values.put(CrimeTable.Cols.SUSPECT, crime.getSuspect());
         values.put(CrimeTable.Cols.PHONE_NUMBER, crime.getPhoneNumber());

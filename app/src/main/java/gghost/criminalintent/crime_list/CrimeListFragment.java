@@ -52,6 +52,7 @@ public class CrimeListFragment extends Fragment {
 
     private boolean mIsSubtitleVisible = false;
 
+
     /**
      * В onCreate фрагмент обычно fetch'ит данные модели. Установка данных в представления
      * производится в другом методе (onCreateView)
@@ -72,6 +73,8 @@ public class CrimeListFragment extends Fragment {
             ArrayList<Crime> crimes = (ArrayList<Crime>) getArguments().getSerializable(ARG_ARRAY_LIST_KEY);
             mCrimeHolderAdapter = new CrimeHolderAdapter(crimes);
         }
+
+
     }
 
     /**
