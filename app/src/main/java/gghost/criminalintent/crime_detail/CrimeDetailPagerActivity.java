@@ -63,9 +63,6 @@ public class CrimeDetailPagerActivity extends AppCompatActivity {
                 return cf;
             }
 
-
-
-
             @Override
             public int getItemCount() {
                 return CrimeLab.get(getParent()).getCrimeList().size();

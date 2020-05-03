@@ -21,9 +21,8 @@
 				android:id="@+id/crime_photo_id"
 				android:layout_width="80dp"
 				android:layout_height="80dp"
-				android:scaleType="centerInside"
 				android:cropToPadding="true"
-				android:background="@android:color/darker_gray"
+				android:scaleType="centerCrop"
 				app:srcCompat="@android:drawable/ic_menu_gallery" />
 			
 			<ImageButton

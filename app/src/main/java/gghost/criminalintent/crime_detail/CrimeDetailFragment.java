@@ -46,6 +46,7 @@ import java.util.Objects;
 import java.util.UUID;
 
 import gghost.criminalintent.R;
+import gghost.criminalintent._helpers.PictureUtils;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
@@ -65,8 +66,9 @@ public class CrimeDetailFragment extends Fragment {
     private static final int MENU_ITEM_DELETE_CRIME_ID = 1; //Code of menu item
 
     private Crime mCrime;
-    private boolean mIsNew;
     private File mPhotoFile;
+    private boolean mIsNew;
+    private boolean shouldClearTextEdit; //depends on mIsNew
 
     private EditText mTitleTextField;
     private Button mDateButton;
@@ -99,25 +101,12 @@ public class CrimeDetailFragment extends Fragment {
         }
         mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
         mIsNew = getArguments().getBoolean(ARG_IS_NEW_KEY, false);
+        shouldClearTextEdit = mIsNew; //следует ли при первом фокусе отчистить поле title
         mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime);
 
         this.setHasOptionsMenu(true);
 
 
-    }
-
-    @Override
-    public void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        outState.putSerializable(ARG_CRIME_ID_KEY, mCrime.getId());
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        //Обновляем данные о преступлении. Это нужно, например, при свайпе, или при нажатии
-        //кнопки back после окончания редактирования
-        CrimeLab.get(getActivity()).updateCrime(mCrime);
     }
 
     @Nullable
@@ -126,8 +115,6 @@ public class CrimeDetailFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_crime_detail, container, false);
 
         mPhotoView = v.findViewById(R.id.crime_photo_id);
-
-
 
         mPhotoButton = v.findViewById(R.id.crime_camera_button_id);
         //Интент число для проверки возможности снимка
@@ -144,7 +131,7 @@ public class CrimeDetailFragment extends Fragment {
                 //Создаем неявный интент для камеры
                 //Создаем путь для файла. Путь генерируется FileProvider'ом и преобразуется в Uri
                 //т.к. приложение работает только с этим типом данных
-                Uri newPhotoUri = FileProvider.getUriForFile(getActivity(),"gghost.criminalintent", mPhotoFile);
+                Uri newPhotoUri = FileProvider.getUriForFile(getActivity(), "gghost.criminalintent", mPhotoFile);
                 //Мы говорим интенту, куда сохранить данные фотографии, указывая ключом
                 //константу MediaStore.EXTRA_OUTPUT и кладя туда сгенерированный uri
                 captureImageIntent.putExtra(MediaStore.EXTRA_OUTPUT, newPhotoUri);
@@ -154,17 +141,17 @@ public class CrimeDetailFragment extends Fragment {
                 //А queryIntentActivities возвращает список из информаций обо всех активностях,
                 //способных захендлить intent.
                 //Thus, cameraActivities содержит инфу обо всех "камерных" активностях
-                List<ResolveInfo> cameraActivities = getActivity().getPackageManager().queryIntentActivities(captureImageIntent,PackageManager.MATCH_DEFAULT_ONLY);
+                List<ResolveInfo> cameraActivities = getActivity().getPackageManager().queryIntentActivities(captureImageIntent, PackageManager.MATCH_DEFAULT_ONLY);
                 //Но логично предположить, что каждому из этих активностей нужно единичное
                 //разрешение на запись в нашу файловую систему. Нужно им его подарить
-                for (ResolveInfo resolveInfo: cameraActivities) {
+                for (ResolveInfo resolveInfo : cameraActivities) {
                     /* TODO: почитать, чем отличается resolveInfo от activityInfo */
                     /* Что я понял:
-                    * Активность может раздавать разовые разрешения (типа токены) на запись
-                    * в файловую систему. В методе grantUriPermission указывается, какому пакету
-                    * дается разрешение, далее нужно указать uri, в который активность будет записывать данные
-                    * и последним штрихоим нужно поставить флаг, какой тип разрешения дается:
-                    * FLAG_GRANT_READ_URI_PERMISSION или FLAG_GRANT_WRITE_URI_PERMISSION */
+                     * Активность может раздавать разовые разрешения (типа токены) на запись
+                     * в файловую систему. В методе grantUriPermission указывается, какому пакету
+                     * дается разрешение, далее нужно указать uri, в который активность будет записывать данные
+                     * и последним штрихоим нужно поставить флаг, какой тип разрешения дается:
+                     * FLAG_GRANT_READ_URI_PERMISSION или FLAG_GRANT_WRITE_URI_PERMISSION */
                     //TODO: выяснить, почему камеры работают без разрешения. Код закомменчен специально
                     //getActivity().grantUriPermission(resolveInfo.activityInfo.packageName, newPhotoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 }
@@ -185,6 +172,15 @@ public class CrimeDetailFragment extends Fragment {
 
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
         mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
+        mTitleTextField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+//                if (shouldClearTextEdit && hasFocus) {
+//                    mTitleTextField.setText("");
+//                    shouldClearTextEdit = false;
+//                }
+            }
+        });
 
         mReportCrimeButton = v.findViewById(R.id.report_crime_button_id);
         mReportCrimeButton.setOnClickListener(new View.OnClickListener() {
@@ -238,17 +234,37 @@ public class CrimeDetailFragment extends Fragment {
             }
         });
 
-        if (mIsNew) {
-            mTitleTextField.requestFocus();
-        }
 
         System.out.println("mCrime: " + mCrime);
 
         this.updateUI();
 
+        if (mIsNew) {
+            mTitleTextField.requestFocus();
+        }
+
         return v;
     }
 
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        //Обновляем данные о преступлении. Это нужно, например, при свайпе, или при нажатии
+        //кнопки back после окончания редактирования
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putSerializable(ARG_CRIME_ID_KEY, mCrime.getId());
+    }
 
     /**
      * обработчик данных от потомков
@@ -323,6 +339,16 @@ public class CrimeDetailFragment extends Fragment {
                     c.close();
                 }
                 break;
+            case CAPTURE_PHOTO_REQUEST_CODE:
+                //После того, как изображение установилось, нужно обнулить разрешения
+                //Извлекаем uri файла, который был создан
+                Uri photoUri = FileProvider.getUriForFile(getActivity(), "gghost.criminalintent", mPhotoFile);
+                //revokeUriPermission забирает все данные разрешения на данный uri единовременно.
+                getActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
+                //Есть еще revokeUriPermission с другой сигнатурой, в которой указывается имя пакета
+                //у которого отнимается разрешение.
+                updatePhotoImageView();
+                break;
             default:
                 break;
         }
@@ -364,7 +390,6 @@ public class CrimeDetailFragment extends Fragment {
         public void afterTextChanged(Editable s) {
         }
     };
-
     /**
      * Event-listener смены значения checkbox'a
      */
@@ -374,7 +399,6 @@ public class CrimeDetailFragment extends Fragment {
             mCrime.setSolved(isChecked);
         }
     };
-
     /**
      * Event listener нажатия на кнопку даты
      */
@@ -477,7 +501,7 @@ public class CrimeDetailFragment extends Fragment {
             mTimeButton.setText(df.format(mCrime.getDate()));
             mIsSolvedCheckbox.setChecked(mCrime.isSolved());
             mCallCriminalButton.setVisibility(mCrime.getPhoneNumber() != null ? View.VISIBLE : View.GONE);
-
+            updatePhotoImageView();
         } else {
             throw new NullPointerException("mCrime == null у CrimeDetailFragment");
         }
@@ -493,6 +517,18 @@ public class CrimeDetailFragment extends Fragment {
         return reportString;
     }
 
+    private void updatePhotoImageView() {
+        if (mPhotoFile == null || !mPhotoFile.exists()) {
+            //Используем setImageDrawable, потому что суда можно полжить null
+            mPhotoView.setImageDrawable(null);
+        } else {
+            /* Почему мы не можем использовать mPhotoView.getWidth и mPhotoView.getHeight?
+            * Потому что mPhotoView будет вызываться внутри onCreateView. А первый подсчет размеров
+            * виджетов происходит только после onResume(), который позже onCreateView.
+            * Поэтому приходится довольствоваться тем, что есть. */
+            mPhotoView.setImageBitmap(PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity()));
+        }
+    }
 
     @NonNull
     public static CrimeDetailFragment newInstance(UUID crimeId, boolean isNew) {

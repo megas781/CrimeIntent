@@ -179,6 +179,7 @@ public class CrimeListFragment extends Fragment {
         updateSubtitle();
     }
 
+
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
@@ -222,6 +223,7 @@ public class CrimeListFragment extends Fragment {
     private void goToCreateNewCrimeActivity() {
         //Создаем новое преступление
         Crime newCrime = new Crime();
+        newCrime.setTitle(getString(R.string.new_crime) + " #" + (CrimeLab.get(getActivity()).getCrimeList().size() + 1));
         CrimeLab.get(getActivity()).addCrime(newCrime);
         Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
         startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
