@@ -12,7 +12,7 @@ import java.util.Date;
 import gghost.criminalintent.R;
 import gghost.criminalintent._helpers.AbstractSingleFragmentActivity;
 
-public class DatePickerActivity extends AbstractSingleFragmentActivity implements DatePickerFragmentDelegate, Serializable {
+public class DatePickerActivity extends AbstractSingleFragmentActivity implements DatePickerFragment.DatePickerFragmentDelegate, Serializable {
 
     private static final String CRIME_DATE_KEY = "CRIME_DATE_KEY";
 

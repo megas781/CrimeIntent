@@ -1,6 +1,7 @@
 package gghost.criminalintent.crime_list;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.LayoutInflater;
@@ -21,6 +22,7 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -36,6 +38,11 @@ import gghost.criminalintent.model.CrimeLab;
  */
 public class CrimeListFragment extends Fragment {
 
+    public interface Delegate extends Serializable {
+        void onCrimeSelected(Crime crime, int position);
+        void onCreateNewCrime(Crime crime);
+    }
+
     private static final int CRIME_DETAIL_REQUEST_CODE = 1;
     private static final int CRIME_NEW_REQUEST_CODE = 2;
     private static final String STATE_IS_SUBTITLE_VISIBLE_KEY = "STATE_IS_SUBTITLE_VISIBLE_KEY";
@@ -49,6 +56,8 @@ public class CrimeListFragment extends Fragment {
 
     private LinearLayout mOnEmptyCrimeButtonContainer;
     private Button mOnEmptyCrimeButton;
+
+    private Delegate mDelegate;
 
     private boolean mIsSubtitleVisible = false;
 
@@ -167,6 +176,24 @@ public class CrimeListFragment extends Fragment {
     }
 
     @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        /*TODO: на само деле так делать не совсем правильно. Делегат нужно присваивать
+           в инициализаторе newInstance. Ну да ладно. В книжке показано так */
+        //поставил хоть какую-то проверку на реализацию интерфейса
+        if (context instanceof Delegate) {
+            mDelegate = (Delegate) context;
+        }
+    }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        //Убираем связь с CrimeListActivity
+        mDelegate = null;
+    }
+
+    @Override
     public void onCreateOptionsMenu(@NonNull Menu menu, @NonNull MenuInflater inflater) {
         super.onCreateOptionsMenu(menu, inflater);
         inflater.inflate(R.menu.fragment_crime_list, menu);
@@ -225,17 +252,12 @@ public class CrimeListFragment extends Fragment {
         Crime newCrime = new Crime();
         newCrime.setTitle(getString(R.string.new_crime) + " #" + (CrimeLab.get(getActivity()).getCrimeList().size() + 1));
         CrimeLab.get(getActivity()).addCrime(newCrime);
-        Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
-        startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
-    }
 
-    public static CrimeListFragment newInstance(ArrayList<Crime> crimeList) {
-        Bundle args = new Bundle();
-        //Преобразовываем в обычный Java-массив, чтобы положить в args
-        args.putSerializable(ARG_ARRAY_LIST_KEY, crimeList);
-        CrimeListFragment fragment = new CrimeListFragment();
-        fragment.setArguments(args);
-        return fragment;
+        mDelegate.onCreateNewCrime(newCrime);
+//        updateUI();
+
+//        Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
+//        startActivityForResult(i, CRIME_NEW_REQUEST_CODE);
     }
 
     /**
@@ -287,8 +309,10 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
-            startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
+            mDelegate.onCrimeSelected(mCrime,getAdapterPosition());
+            updateUI();
+//            Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
+//            startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
         }
     }
 
@@ -296,6 +320,7 @@ public class CrimeListFragment extends Fragment {
 
         //MARK: RecyclerView.Adapter implementation
         private ArrayList<Crime> mCrimeList;
+
         public void setCrimeList(ArrayList<Crime> crimeList) {
             mCrimeList = crimeList;
             //Уведомляем RecyclerView прямо внутри Adapter'a
@@ -325,4 +350,14 @@ public class CrimeListFragment extends Fragment {
             return mCrimeList.size();
         }
     }
+
+    public static CrimeListFragment newInstance(ArrayList<Crime> crimeList) {
+        Bundle args = new Bundle();
+        //Преобразовываем в обычный Java-массив, чтобы положить в args
+        args.putSerializable(ARG_ARRAY_LIST_KEY, crimeList);
+        CrimeListFragment fragment = new CrimeListFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
 }

@@ -22,7 +22,7 @@ import gghost.criminalintent.R;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
-public class CrimeDetailPagerActivity extends AppCompatActivity {
+public class CrimeDetailPagerActivity extends AppCompatActivity implements CrimeDetailFragment.Delegate {
 
     private static final String INTENT_CRIME_ID_KEY = "EXTRA_CRIME_ID_KEY";
     private static final String INTENT_IS_NEW_KEY = "INTENT_IS_NEW_KEY";
@@ -57,7 +57,7 @@ public class CrimeDetailPagerActivity extends AppCompatActivity {
             @NonNull
             @Override
             public Fragment createFragment(int position) {
-                CrimeDetailFragment cf = CrimeDetailFragment.newInstance(mCrimeList.get(position).getId(), mIsNew);
+                CrimeDetailFragment cf = CrimeDetailFragment.newInstance(mCrimeList.get(position),CrimeLab.get(CrimeDetailPagerActivity.this).getPhotoFile(mCrimeList.get(position)), mIsNew, CrimeDetailPagerActivity.this);
                 //После создания первого фрагмента mIsNew навсегда становится false
                 mIsNew = false;
                 return cf;
@@ -133,5 +133,16 @@ public class CrimeDetailPagerActivity extends AppCompatActivity {
     private void updateUI() {
         mToBeginningButton.setEnabled(mViewPager2.getCurrentItem() > 0);
         mToEndButton.setEnabled(mViewPager2.getCurrentItem() < (Objects.requireNonNull(mViewPager2.getAdapter()).getItemCount() - 1));
+    }
+
+    @Override
+    public void onCrimeUpdated(Crime crime) {
+        //
+    }
+
+    @Override
+    public void onCrimeDeleted(Crime crime) {
+        //
+        this.finish();
     }
 }

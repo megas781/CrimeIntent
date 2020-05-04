@@ -17,12 +17,13 @@ import java.util.Date;
 
 import gghost.criminalintent.R;
 
-interface DatePickerFragmentDelegate extends Serializable {
-    public void onDatePickerConfirmed(Date date);
-}
+
 
 public class DatePickerFragment extends DialogFragment {
-
+    //Интерфейс делегата
+    interface DatePickerFragmentDelegate extends Serializable {
+        public void onDatePickerConfirmed(Date date);
+    }
     /**
      * Константа дублирует ту, что в активности. Я нашёл в этом смысл.
      * Активности нужна константа даты для того, чтобы создавать интенты для других активностей.

@@ -38,25 +38,33 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
-import androidx.fragment.app.FragmentManager;
 
 import java.io.File;
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
-import java.util.UUID;
 
 import gghost.criminalintent.R;
 import gghost.criminalintent._helpers.PictureUtils;
 import gghost.criminalintent.model.Crime;
-import gghost.criminalintent.model.CrimeLab;
 
 public class CrimeDetailFragment extends Fragment {
 
-    private static final String ARG_CRIME_ID_KEY = "ARG_CRIME_ID_KEY";
+
+    private static final String PACKAGE_AUTHORITY = "gghost.criminalintent";
+
+    public interface Delegate extends Serializable {
+        void onCrimeUpdated(Crime crime);
+        void onCrimeDeleted(Crime crime);
+    }
+
+    private static final String ARG_CRIME_KEY = "ARG_CRIME_ID_KEY";
+    private static final String ARG_CRIME_PHOTO_FILE_KEY = "ARG_CRIME_PHOTO_FILE_KEY";
     private static final String ARG_IS_NEW_KEY = "ARG_IS_NEW_KEY";
+    private static final String ARG_DELEGATE_KEY = "ARG_DELEGATE_KEY";
     //Код для TargetFragment'a
     private static final int DATE_PICKER_FRAGMENT_REQUEST_CODE = 0; //Explicit Intent
     private static final int TIME_PICKER_FRAGMENT_REQUEST_CODE = 1; //Explicit Intent
@@ -71,7 +79,6 @@ public class CrimeDetailFragment extends Fragment {
     private Crime mCrime;
     private File mPhotoFile;
     private boolean mIsNew;
-    private boolean shouldClearTextEdit; //depends on mIsNew
 
     private EditText mTitleTextField;
     private Button mDateButton;
@@ -83,32 +90,37 @@ public class CrimeDetailFragment extends Fragment {
     private ImageView mPhotoView;
     private ImageButton mPhotoButton;
 
+    private Delegate mDelegate;
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        System.out.println("getArguments()    : " + (getArguments() != null));
-        System.out.println("savedInstanceState: " + (savedInstanceState != null));
+//        System.out.println("getArguments()    : " + (getArguments() != null));
+//        System.out.println("savedInstanceState: " + (savedInstanceState != null));
 
-        //Миссия: достать crimeId
-
-        UUID crimeId = null;
+        //Миссия: достать crime
         //Сначала пытаемся достать ID из состояния. Оно приорететно над аргументом
-        if (savedInstanceState != null) {
-            //Если есть сохранение в состоянии, то используем его
-            crimeId = (UUID) savedInstanceState.getSerializable(ARG_CRIME_ID_KEY);
+        if (savedInstanceState == null) {
+            //Если state пустой, то загружаем данные из аргументов
+            if (getArguments() != null) {
+                mCrime = (Crime) getArguments().getSerializable(ARG_CRIME_KEY);
+                mIsNew = getArguments().getBoolean(ARG_DELEGATE_KEY, false);
+                mPhotoFile = (File) getArguments().getSerializable(ARG_CRIME_PHOTO_FILE_KEY);
+                mDelegate = (Delegate) getArguments().getSerializable(ARG_DELEGATE_KEY);
+            } else {
+                //Аргументы должны быть всегда, иначе бросаем исключение
+                throw new NullPointerException("getArguments() must not be null");
+            }
+        } else {
+            //Если state имеется, то подгружаем данные из него
+            mCrime = (Crime) savedInstanceState.getSerializable(ARG_CRIME_KEY);
+            mIsNew = savedInstanceState.getBoolean(ARG_DELEGATE_KEY, false);
+            mPhotoFile = (File) savedInstanceState.getSerializable(ARG_CRIME_PHOTO_FILE_KEY);
+            mDelegate = (Delegate) savedInstanceState.getSerializable(ARG_DELEGATE_KEY);
         }
-        //Если в состоянии ничего не нашлось, то хотя бы из аргументов нужно подгрузить
-        if (crimeId == null) {
-            crimeId = (UUID) getArguments().getSerializable(ARG_CRIME_ID_KEY);
-        }
-        mCrime = CrimeLab.get(getActivity()).getCrime(crimeId);
-        mIsNew = getArguments().getBoolean(ARG_IS_NEW_KEY, false);
-        shouldClearTextEdit = mIsNew; //следует ли при первом фокусе отчистить поле title
-        mPhotoFile = CrimeLab.get(getActivity()).getPhotoFile(mCrime);
 
         this.setHasOptionsMenu(true);
-
     }
 
     @Nullable
@@ -120,9 +132,8 @@ public class CrimeDetailFragment extends Fragment {
         mPhotoView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                FragmentManager fm = getActivity().getSupportFragmentManager();
                 CrimePhotoDetailFragment fragment = CrimePhotoDetailFragment.newInstance(mPhotoFile.getPath());
-                fragment.show(fm,null);
+                fragment.show(getActivity().getSupportFragmentManager(),null);
             }
         });
 
@@ -142,7 +153,7 @@ public class CrimeDetailFragment extends Fragment {
                 //Создаем неявный интент для камеры
                 //Создаем путь для файла. Путь генерируется FileProvider'ом и преобразуется в Uri
                 //т.к. приложение работает только с этим типом данных
-                Uri newPhotoUri = FileProvider.getUriForFile(getActivity(), "gghost.criminalintent", mPhotoFile);
+                Uri newPhotoUri = FileProvider.getUriForFile(getActivity(), PACKAGE_AUTHORITY, mPhotoFile);
                 //Мы говорим интенту, куда сохранить данные фотографии, указывая ключом
                 //константу MediaStore.EXTRA_OUTPUT и кладя туда сгенерированный uri
                 captureImageIntent.putExtra(MediaStore.EXTRA_OUTPUT, newPhotoUri);
@@ -186,10 +197,6 @@ public class CrimeDetailFragment extends Fragment {
         mTitleTextField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
-//                if (shouldClearTextEdit && hasFocus) {
-//                    mTitleTextField.setText("");
-//                    shouldClearTextEdit = false;
-//                }
             }
         });
 
@@ -272,7 +279,7 @@ public class CrimeDetailFragment extends Fragment {
         super.onPause();
         //Обновляем данные о преступлении. Это нужно, например, при свайпе, или при нажатии
         //кнопки back после окончания редактирования
-        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        mDelegate.onCrimeUpdated(mCrime);
     }
 
     @Override
@@ -280,10 +287,14 @@ public class CrimeDetailFragment extends Fragment {
         super.onResume();
     }
 
+
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putSerializable(ARG_CRIME_ID_KEY, mCrime.getId());
+        outState.putSerializable(ARG_CRIME_KEY, mCrime);
+        outState.putBoolean(ARG_IS_NEW_KEY,mIsNew);
+        outState.putSerializable(ARG_CRIME_PHOTO_FILE_KEY,mPhotoFile);
+        outState.putSerializable(ARG_DELEGATE_KEY,mDelegate);
     }
 
     /**
@@ -362,7 +373,7 @@ public class CrimeDetailFragment extends Fragment {
             case CAPTURE_PHOTO_REQUEST_CODE:
                 //После того, как изображение установилось, нужно обнулить разрешения
                 //Извлекаем uri файла, который был создан
-                Uri photoUri = FileProvider.getUriForFile(getActivity(), "gghost.criminalintent", mPhotoFile);
+                Uri photoUri = FileProvider.getUriForFile(getActivity(), PACKAGE_AUTHORITY, mPhotoFile);
                 //revokeUriPermission забирает все данные разрешения на данный uri единовременно.
                 getActivity().revokeUriPermission(photoUri, Intent.FLAG_GRANT_WRITE_URI_PERMISSION);
                 //Есть еще revokeUriPermission с другой сигнатурой, в которой указывается имя пакета
@@ -502,8 +513,9 @@ public class CrimeDetailFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case MENU_ITEM_DELETE_CRIME_ID:
-                CrimeLab.get(getActivity()).deleteCrime(mCrime.getId());
-                getActivity().finish();
+                mDelegate.onCrimeDeleted(mCrime);
+
+                //                getActivity().finish();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -555,10 +567,12 @@ public class CrimeDetailFragment extends Fragment {
     }
 
     @NonNull
-    public static CrimeDetailFragment newInstance(UUID crimeId, boolean isNew) {
+    public static CrimeDetailFragment newInstance(Crime crime, File photoFile, boolean isNew, Delegate delegate) {
         Bundle args = new Bundle();
-        args.putSerializable(ARG_CRIME_ID_KEY, crimeId);
+        args.putSerializable(ARG_CRIME_KEY, crime);
+        args.putSerializable(ARG_CRIME_PHOTO_FILE_KEY, photoFile);
         args.putBoolean(ARG_IS_NEW_KEY, isNew);
+        args.putSerializable(ARG_DELEGATE_KEY, delegate);
         CrimeDetailFragment fragment = new CrimeDetailFragment();
         fragment.setArguments(args);
         return fragment;

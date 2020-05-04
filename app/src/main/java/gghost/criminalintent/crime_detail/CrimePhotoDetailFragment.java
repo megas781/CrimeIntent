@@ -1,15 +1,11 @@
 package gghost.criminalintent.crime_detail;
 
-import android.gesture.Gesture;
-import android.gesture.GestureUtils;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.os.Bundle;
-import android.view.Display;
-import android.view.GestureDetector;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
+
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
@@ -20,15 +16,12 @@ import android.widget.LinearLayout;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.FileProvider;
 import androidx.fragment.app.DialogFragment;
-import androidx.fragment.app.Fragment;
 
 import java.io.File;
 
 import gghost.criminalintent.R;
 import gghost.criminalintent._helpers.PictureUtils;
-import gghost.criminalintent.model.CrimeLab;
 
 public class CrimePhotoDetailFragment extends DialogFragment {
 
