@@ -13,6 +13,11 @@ import gghost.criminalintent.model.CrimeLab;
 
 public class CrimeListActivity extends AbstractSingleFragmentActivity implements CrimeListFragment.Delegate, CrimeDetailFragment.Delegate {
 
+    private CrimeListFragment getCrimeListFragment() {
+        return (CrimeListFragment) getSupportFragmentManager()
+                .findFragmentById(R.id.fragment_container);
+    }
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,33 +40,20 @@ public class CrimeListActivity extends AbstractSingleFragmentActivity implements
             Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this,crime.getId(),position, false);
             startActivity(i);
         } else {
-            CrimeDetailFragment crimeDetailFragment = CrimeDetailFragment.newInstance(crime, CrimeLab.get(this).getPhotoFile(crime), false, this);
+            CrimeDetailFragment crimeDetailFragment = CrimeDetailFragment.newInstance(crime, CrimeLab.get(this).getPhotoFile(crime), false);
             getSupportFragmentManager().beginTransaction()
                     .replace(R.id.detail_fragment_container, crimeDetailFragment)
                     .commit();
         }
     }
-    @Override
-    public void onCreateNewCrime(Crime crime) {
-        if (findViewById(R.id.detail_fragment_container) == null) {
-            Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this, crime.getId(),CrimeLab.get(this).getCrimeList().size(), true);
-            startActivity(i);
-        } else {
-            CrimeDetailFragment newCrimeDetailFragment = CrimeDetailFragment.newInstance(crime, CrimeLab.get(this).getPhotoFile(crime), true, this);
-            getSupportFragmentManager().beginTransaction()
-                    .replace(R.id.detail_fragment_container, newCrimeDetailFragment)
-                    .commit();
-        }
-    }
-
 
     @Override
     public void onCrimeUpdated(Crime crime) {
-        CrimeLab.get(this).updateCrime(crime);
-
+        getCrimeListFragment().updateUI();
     }
+
     @Override
-    public void onCrimeDeleted(Crime crime) {
-        CrimeLab.get(this).deleteCrime(crime.getId());
+    public void onCrimeDeleted() {
+        getCrimeListFragment().updateUI();
     }
 }

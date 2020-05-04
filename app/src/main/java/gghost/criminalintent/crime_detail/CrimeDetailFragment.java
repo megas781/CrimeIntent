@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -49,17 +50,18 @@ import java.util.Objects;
 
 import gghost.criminalintent.R;
 import gghost.criminalintent._helpers.PictureUtils;
+import gghost.criminalintent.crime_list.CrimeListFragment;
 import gghost.criminalintent.model.Crime;
+import gghost.criminalintent.model.CrimeLab;
 
 public class CrimeDetailFragment extends Fragment {
 
+    public interface Delegate {
+        void onCrimeUpdated(Crime crime);
+        void onCrimeDeleted();
+    }
 
     private static final String PACKAGE_AUTHORITY = "gghost.criminalintent";
-
-    public interface Delegate extends Serializable {
-        void onCrimeUpdated(Crime crime);
-        void onCrimeDeleted(Crime crime);
-    }
 
     private static final String ARG_CRIME_KEY = "ARG_CRIME_ID_KEY";
     private static final String ARG_CRIME_PHOTO_FILE_KEY = "ARG_CRIME_PHOTO_FILE_KEY";
@@ -107,7 +109,6 @@ public class CrimeDetailFragment extends Fragment {
                 mCrime = (Crime) getArguments().getSerializable(ARG_CRIME_KEY);
                 mIsNew = getArguments().getBoolean(ARG_DELEGATE_KEY, false);
                 mPhotoFile = (File) getArguments().getSerializable(ARG_CRIME_PHOTO_FILE_KEY);
-                mDelegate = (Delegate) getArguments().getSerializable(ARG_DELEGATE_KEY);
             } else {
                 //Аргументы должны быть всегда, иначе бросаем исключение
                 throw new NullPointerException("getArguments() must not be null");
@@ -117,7 +118,6 @@ public class CrimeDetailFragment extends Fragment {
             mCrime = (Crime) savedInstanceState.getSerializable(ARG_CRIME_KEY);
             mIsNew = savedInstanceState.getBoolean(ARG_DELEGATE_KEY, false);
             mPhotoFile = (File) savedInstanceState.getSerializable(ARG_CRIME_PHOTO_FILE_KEY);
-            mDelegate = (Delegate) savedInstanceState.getSerializable(ARG_DELEGATE_KEY);
         }
 
         this.setHasOptionsMenu(true);
@@ -193,7 +193,7 @@ public class CrimeDetailFragment extends Fragment {
         mIsSolvedCheckbox.setOnCheckedChangeListener(mCheckboxListener);
 
         mTitleTextField = v.findViewById(R.id.crime_title_edit_view_id);
-        mTitleTextField.addTextChangedListener(this.crimeEditTextListener);
+        mTitleTextField.addTextChangedListener(crimeEditTextListener);
         mTitleTextField.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
             public void onFocusChange(View v, boolean hasFocus) {
@@ -279,12 +279,28 @@ public class CrimeDetailFragment extends Fragment {
         super.onPause();
         //Обновляем данные о преступлении. Это нужно, например, при свайпе, или при нажатии
         //кнопки back после окончания редактирования
-        mDelegate.onCrimeUpdated(mCrime);
     }
 
     @Override
     public void onResume() {
         super.onResume();
+    }
+
+    @Override
+    public void onAttach(@NonNull Context context) {
+        super.onAttach(context);
+        /*TODO: на само деле так делать не совсем правильно. Делегат нужно присваивать
+           в инициализаторе newInstance. Ну да ладно. В книжке показано так */
+        //поставил хоть какую-то проверку на реализацию интерфейса
+        if (context instanceof CrimeDetailFragment.Delegate) {
+            mDelegate = (CrimeDetailFragment.Delegate) context;
+        }
+    }
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        //Убираем связь с CrimeListActivity
+        mDelegate = null;
     }
 
 
@@ -294,7 +310,6 @@ public class CrimeDetailFragment extends Fragment {
         outState.putSerializable(ARG_CRIME_KEY, mCrime);
         outState.putBoolean(ARG_IS_NEW_KEY,mIsNew);
         outState.putSerializable(ARG_CRIME_PHOTO_FILE_KEY,mPhotoFile);
-        outState.putSerializable(ARG_DELEGATE_KEY,mDelegate);
     }
 
     /**
@@ -313,6 +328,7 @@ public class CrimeDetailFragment extends Fragment {
                         throw new NullPointerException("No data from datePickerFragment, but expected");
                     }
                 }
+                updateCrime();
                 updateUI();
                 break;
             case TIME_PICKER_FRAGMENT_REQUEST_CODE:
@@ -323,6 +339,7 @@ public class CrimeDetailFragment extends Fragment {
                         throw new NullPointerException("No data from timePickerFragment, but expected");
                     }
                 }
+                updateCrime();
                 updateUI();
             case PICK_CONTACT_REQUEST_CODE:
 
@@ -411,6 +428,7 @@ public class CrimeDetailFragment extends Fragment {
         public void onTextChanged(CharSequence s, int start, int before, int count) {
             //Именно .toString, а не (String) s. Последний почему-то вызывает ошибку
             mCrime.setTitle(s.toString());
+            updateCrime();
         }
 
         @Override
@@ -428,6 +446,7 @@ public class CrimeDetailFragment extends Fragment {
         @Override
         public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
             mCrime.setSolved(isChecked);
+            updateCrime();
         }
     };
     /**
@@ -513,9 +532,9 @@ public class CrimeDetailFragment extends Fragment {
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
         switch (item.getItemId()) {
             case MENU_ITEM_DELETE_CRIME_ID:
-                mDelegate.onCrimeDeleted(mCrime);
-
-                //                getActivity().finish();
+                CrimeLab.get(getActivity()).deleteCrime(mCrime.getId());
+                mDelegate.onCrimeDeleted();
+                getFragmentManager().beginTransaction().remove(this).commit();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
@@ -550,7 +569,6 @@ public class CrimeDetailFragment extends Fragment {
         String reportString = getString(R.string.crime_report, mCrime.getTitle(), dateString, solvedString, suspectString);
         return reportString;
     }
-
     private void updatePhotoImageView() {
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             //Используем setImageDrawable, потому что суда можно полжить null
@@ -565,14 +583,17 @@ public class CrimeDetailFragment extends Fragment {
             mPhotoView.setImageBitmap(bitmap);
         }
     }
+    private void updateCrime() {
+        CrimeLab.get(getActivity()).updateCrime(mCrime);
+        mDelegate.onCrimeUpdated(mCrime);
+    }
 
     @NonNull
-    public static CrimeDetailFragment newInstance(Crime crime, File photoFile, boolean isNew, Delegate delegate) {
+    public static CrimeDetailFragment newInstance(Crime crime, File photoFile, boolean isNew) {
         Bundle args = new Bundle();
         args.putSerializable(ARG_CRIME_KEY, crime);
         args.putSerializable(ARG_CRIME_PHOTO_FILE_KEY, photoFile);
         args.putBoolean(ARG_IS_NEW_KEY, isNew);
-        args.putSerializable(ARG_DELEGATE_KEY, delegate);
         CrimeDetailFragment fragment = new CrimeDetailFragment();
         fragment.setArguments(args);
         return fragment;

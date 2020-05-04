@@ -57,7 +57,7 @@ public class CrimeDetailPagerActivity extends AppCompatActivity implements Crime
             @NonNull
             @Override
             public Fragment createFragment(int position) {
-                CrimeDetailFragment cf = CrimeDetailFragment.newInstance(mCrimeList.get(position),CrimeLab.get(CrimeDetailPagerActivity.this).getPhotoFile(mCrimeList.get(position)), mIsNew, CrimeDetailPagerActivity.this);
+                CrimeDetailFragment cf = CrimeDetailFragment.newInstance(mCrimeList.get(position),CrimeLab.get(CrimeDetailPagerActivity.this).getPhotoFile(mCrimeList.get(position)), mIsNew);
                 //После создания первого фрагмента mIsNew навсегда становится false
                 mIsNew = false;
                 return cf;
@@ -137,12 +137,11 @@ public class CrimeDetailPagerActivity extends AppCompatActivity implements Crime
 
     @Override
     public void onCrimeUpdated(Crime crime) {
-        //
+
     }
 
     @Override
-    public void onCrimeDeleted(Crime crime) {
-        //
-        this.finish();
+    public void onCrimeDeleted() {
+        finish();
     }
 }

@@ -40,7 +40,6 @@ public class CrimeListFragment extends Fragment {
 
     public interface Delegate extends Serializable {
         void onCrimeSelected(Crime crime, int position);
-        void onCreateNewCrime(Crime crime);
     }
 
     private static final int CRIME_DETAIL_REQUEST_CODE = 1;
@@ -48,7 +47,6 @@ public class CrimeListFragment extends Fragment {
     private static final String STATE_IS_SUBTITLE_VISIBLE_KEY = "STATE_IS_SUBTITLE_VISIBLE_KEY";
 
     private static final String ARG_ARRAY_LIST_KEY = "ARG_ARRAY_LIST_KEY";
-
     //Экземпляр RecyclerView
     private RecyclerView mCrimeRecyclerView;
     //Адаптер
@@ -185,7 +183,6 @@ public class CrimeListFragment extends Fragment {
             mDelegate = (Delegate) context;
         }
     }
-
     @Override
     public void onDetach() {
         super.onDetach();
@@ -237,7 +234,7 @@ public class CrimeListFragment extends Fragment {
     }
 
     //Самописный метод для обновления UI
-    private void updateUI() {
+    public void updateUI() {
         /*ИМЕННО ЗДЕСЬ МЫ ОБНОВЛЯЕМ RecyclerView. Уведомление Adapter.notifyDataSetChanged()
          * вызывается прямо в adapter'e */
         mCrimeHolderAdapter.setCrimeList(CrimeLab.get(getActivity()).getCrimeList());
@@ -250,10 +247,10 @@ public class CrimeListFragment extends Fragment {
     private void goToCreateNewCrimeActivity() {
         //Создаем новое преступление
         Crime newCrime = new Crime();
-        newCrime.setTitle(getString(R.string.new_crime) + " #" + (CrimeLab.get(getActivity()).getCrimeList().size() + 1));
         CrimeLab.get(getActivity()).addCrime(newCrime);
+        newCrime.setTitle(getString(R.string.new_crime) + " #" + CrimeLab.get(getActivity()).getCrimeList().size());
 
-        mDelegate.onCreateNewCrime(newCrime);
+        mDelegate.onCrimeSelected(newCrime, CrimeLab.get(getActivity()).getCrimeList().size());
 //        updateUI();
 
 //        Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(getActivity(), newCrime.getId(), CrimeLab.get(getActivity()).getCrimeList().size(), true);
@@ -309,7 +306,7 @@ public class CrimeListFragment extends Fragment {
          */
         @Override
         public void onClick(View v) {
-            mDelegate.onCrimeSelected(mCrime,getAdapterPosition());
+            mDelegate.onCrimeSelected(mCrime, getAdapterPosition());
             updateUI();
 //            Intent i = CrimeDetailPagerActivity.createIntentForCrimeListActivity(this.itemView.getContext(), mCrime.getId(), getAdapterPosition(), false);
 //            startActivityForResult(i, CRIME_DETAIL_REQUEST_CODE);
