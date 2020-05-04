@@ -41,9 +41,9 @@ public class PictureUtils {
             float widthScale = srcWidth / destWidth;
             float heightScale = srcHeight / destHeight;
 
-            // Т.к. мы масштабируем в духе css contain, рациональнее будет больше сжать, чем меньше.
+            // Т.к. мы масштабируем в духе css cover, рациональнее будет больше сжать, чем меньше.
             //Поэтому какой стороны больше коэффициент (которой стороне нужней), то сторону нужно больше сжать.
-            inSampleSize = Math.round(Math.max(widthScale, heightScale));
+            inSampleSize = Math.round(Math.min(widthScale, heightScale));
         }
 
         //Создаем новые свойства декодирования

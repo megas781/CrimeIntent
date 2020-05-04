@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.database.Cursor;
+import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
 import android.provider.ContactsContract.CommonDataKinds;
@@ -23,6 +24,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
@@ -36,6 +38,7 @@ import androidx.annotation.Nullable;
 import androidx.core.app.ShareCompat;
 import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
 
 import java.io.File;
 import java.text.DateFormat;
@@ -106,7 +109,6 @@ public class CrimeDetailFragment extends Fragment {
 
         this.setHasOptionsMenu(true);
 
-
     }
 
     @Nullable
@@ -115,6 +117,15 @@ public class CrimeDetailFragment extends Fragment {
         View v = inflater.inflate(R.layout.fragment_crime_detail, container, false);
 
         mPhotoView = v.findViewById(R.id.crime_photo_id);
+        mPhotoView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                FragmentManager fm = getActivity().getSupportFragmentManager();
+                CrimePhotoDetailFragment fragment = CrimePhotoDetailFragment.newInstance(mPhotoFile.getPath());
+                fragment.show(fm,null);
+            }
+        });
+
 
         mPhotoButton = v.findViewById(R.id.crime_camera_button_id);
         //Интент число для проверки возможности снимка
@@ -235,7 +246,16 @@ public class CrimeDetailFragment extends Fragment {
         });
 
 
-        System.out.println("mCrime: " + mCrime);
+//        System.out.println("mCrime: " + mCrime);
+
+        //Event, когда подсчитаются размеры виджетов
+        ViewTreeObserver vto = v.getViewTreeObserver();
+        vto.addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+            @Override
+            public void onGlobalLayout() {
+                updatePhotoImageView();
+            }
+        });
 
         this.updateUI();
 
@@ -501,7 +521,9 @@ public class CrimeDetailFragment extends Fragment {
             mTimeButton.setText(df.format(mCrime.getDate()));
             mIsSolvedCheckbox.setChecked(mCrime.isSolved());
             mCallCriminalButton.setVisibility(mCrime.getPhoneNumber() != null ? View.VISIBLE : View.GONE);
-            updatePhotoImageView();
+            //Из-за того, чтоы updatePhotoImageView() переместился в onGlobalLayout event,
+            //есть мнение, что здесь его использовать не стоит
+            //updatePhotoImageView();
         } else {
             throw new NullPointerException("mCrime == null у CrimeDetailFragment");
         }
@@ -526,7 +548,9 @@ public class CrimeDetailFragment extends Fragment {
             * Потому что mPhotoView будет вызываться внутри onCreateView. А первый подсчет размеров
             * виджетов происходит только после onResume(), который позже onCreateView.
             * Поэтому приходится довольствоваться тем, что есть. */
-            mPhotoView.setImageBitmap(PictureUtils.getScaledBitmap(mPhotoFile.getPath(), getActivity()));
+            Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), mPhotoView.getWidth(), mPhotoView.getHeight());
+            System.out.println("bitmap size: " + bitmap.getWidth() + "px " + bitmap.getHeight() + "px");
+            mPhotoView.setImageBitmap(bitmap);
         }
     }
 
