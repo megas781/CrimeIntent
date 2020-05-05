@@ -51,5 +51,20 @@
 	
 	<string name="read_contacts_permission_reason">Нам просто нужно знать имя преступника.</string>
 	
+	<string name="crime_photo_button_description">Сделать фотографию преступления</string>
+	<string name="crime_photo_no_image_description">Фото преступления (не установлено)</string>
+	<string name="crime_photo_image_description">Фото преступления (установлено)</string>
+	
+	<string name="crime_item_description">Преступление "%1$s" произошло %2$s, %3$s</string>
+	<string name="not_solved">преступник еще не наказан</string>
+	<string name="solved">преступник уже наказан</string>
+	
+	<string name="change_crime_date">Изменить дату претупления</string>
+	<string name="change_crime_time">Изменить время преступления</string>
+	<string name="call_suspect">Позвонить подозреваемому</string>
+	<string name="choose_another_suspect_description">Указан подозреваемый: %1$s. Указать другого подозреваемого</string>
+	<string name="share_the_crime">Поделиться преступлением</string>
+	
+	<string name="photo_was_changed_acc_announce">Фото было изменено</string>
 	
 </resources>

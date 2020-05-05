@@ -277,6 +277,8 @@ public class CrimeListFragment extends Fragment {
             mCrimeSolvedImageView = itemView.findViewById(R.id.crime_solved_image_view_id);
 
             itemView.setOnClickListener(this);
+
+
         }
 
         public void bind(Crime crime) {
@@ -297,6 +299,13 @@ public class CrimeListFragment extends Fragment {
             if (mCrimeSolvedImageView != null) {
                 mCrimeSolvedImageView.setVisibility(mCrime.isSolved() ? View.VISIBLE : View.INVISIBLE);
             }
+
+
+            String accDescription = getString(R.string.crime_item_description,mCrime.getTitle(), DateFormat.getDateInstance().format(mCrime.getDate()), getString(mCrime.isSolved() ? R.string.solved : R.string.not_solved));
+
+
+            itemView.setContentDescription(accDescription);
+
         }
 
         /**

@@ -23,12 +23,14 @@
 				android:layout_height="80dp"
 				android:cropToPadding="true"
 				android:scaleType="centerCrop"
+				android:contentDescription="@string/crime_photo_no_image_description"
 				app:srcCompat="@android:drawable/ic_menu_gallery" />
 			
 			<ImageButton
 				android:id="@+id/crime_camera_button_id"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
+				android:contentDescription="@string/crime_photo_button_description"
 				app:srcCompat="@android:drawable/ic_menu_camera" />
 		</LinearLayout>
 		
@@ -41,7 +43,8 @@
 				style="?android:listSeparatorTextViewStyle"
 				android:layout_width="match_parent"
 				android:layout_height="wrap_content"
-				android:text="@string/crime_title_label" />
+				android:text="@string/crime_title_label"
+				android:labelFor="@+id/crime_title_edit_view_id"/>
 			
 			<EditText
 				android:id="@+id/crime_title_edit_view_id"
@@ -55,7 +58,7 @@
 		style="?android:listSeparatorTextViewStyle"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
-		android:text="@string/crime_details_label"/>
+		android:text="@string/crime_details_label" />
 	
 	<LinearLayout
 		android:layout_width="match_parent"
@@ -68,12 +71,14 @@
 			android:layout_width="0dp"
 			android:layout_height="wrap_content"
 			android:layout_marginRight="16dp"
+			android:contentDescription="@string/change_crime_date"
 			android:layout_weight="1"/>
 		
 		<Button
 			android:id="@+id/crime_time_button"
 			android:layout_width="0dp"
 			android:layout_weight="1"
+			android:contentDescription="@string/change_crime_time"
 			android:layout_height="wrap_content" />
 	</LinearLayout>
 	
@@ -89,12 +94,14 @@
 		>
 		<Button
 			android:layout_width="0dp"
+			android:contentDescription="@string/choose_another_suspect_description"
 			android:layout_height="wrap_content"
 			android:id="@+id/choose_suspect_button_id"
 			android:text="@string/crime_choose_suspect_label"
 			android:layout_weight="0.7"
 			/>
 		<Button
+			android:contentDescription="@string/call_suspect"
 			android:layout_marginLeft="16dp"
 			android:layout_width="50dp"
 			android:layout_height="50dp"
@@ -103,6 +110,7 @@
 	</LinearLayout>
 	
 	<Button
+		android:contentDescription="@string/share_the_crime"
 		android:layout_width="match_parent"
 		android:layout_height="wrap_content"
 		android:id="@+id/report_crime_button_id"

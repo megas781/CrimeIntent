@@ -41,7 +41,6 @@ import androidx.core.content.FileProvider;
 import androidx.fragment.app.Fragment;
 
 import java.io.File;
-import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -50,7 +49,6 @@ import java.util.Objects;
 
 import gghost.criminalintent.R;
 import gghost.criminalintent._helpers.PictureUtils;
-import gghost.criminalintent.crime_list.CrimeListFragment;
 import gghost.criminalintent.model.Crime;
 import gghost.criminalintent.model.CrimeLab;
 
@@ -237,6 +235,9 @@ public class CrimeDetailFragment extends Fragment {
         //Устанавливаем значение для кнопки, если оно есть
         if (mCrime.getSuspect() != null) {
             mChooseSuspectButton.setText(mCrime.getSuspect());
+            mChooseSuspectButton.setContentDescription(getString(R.string.choose_another_suspect_description, mCrime.getSuspect()));
+        } else {
+            mChooseSuspectButton.setContentDescription(getString(R.string.crime_choose_suspect_label));
         }
 
         //по-моему бесполезная строка
@@ -341,6 +342,7 @@ public class CrimeDetailFragment extends Fragment {
                 }
                 updateCrime();
                 updateUI();
+                break;
             case PICK_CONTACT_REQUEST_CODE:
 
                 if (data != null) {
@@ -396,6 +398,14 @@ public class CrimeDetailFragment extends Fragment {
                 //Есть еще revokeUriPermission с другой сигнатурой, в которой указывается имя пакета
                 //у которого отнимается разрешение.
                 updatePhotoImageView();
+
+                //Accessablility event announcement about change of photo
+                getView().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        getView().announceForAccessibility(getString(R.string.photo_was_changed_acc_announce));
+                    }
+                }, 300);
                 break;
             default:
                 break;
@@ -573,6 +583,7 @@ public class CrimeDetailFragment extends Fragment {
         if (mPhotoFile == null || !mPhotoFile.exists()) {
             //Используем setImageDrawable, потому что суда можно полжить null
             mPhotoView.setImageDrawable(null);
+            mPhotoView.setContentDescription(getString(R.string.crime_photo_no_image_description));
         } else {
             /* Почему мы не можем использовать mPhotoView.getWidth и mPhotoView.getHeight?
             * Потому что mPhotoView будет вызываться внутри onCreateView. А первый подсчет размеров
@@ -581,6 +592,7 @@ public class CrimeDetailFragment extends Fragment {
             Bitmap bitmap = PictureUtils.getScaledBitmap(mPhotoFile.getPath(), mPhotoView.getWidth(), mPhotoView.getHeight());
             System.out.println("bitmap size: " + bitmap.getWidth() + "px " + bitmap.getHeight() + "px");
             mPhotoView.setImageBitmap(bitmap);
+            mPhotoView.setContentDescription(getString(R.string.crime_photo_image_description));
         }
     }
     private void updateCrime() {

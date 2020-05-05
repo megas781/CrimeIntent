@@ -50,4 +50,20 @@
 	
 	<string name="read_contacts_permission_reason">We just need to now crimer\'s name.</string>
 	
+	<string name="crime_photo_button_description">Take photo of crime scene</string>
+	<string name="crime_photo_no_image_description">Crime scene photo (not set)</string>
+	<string name="crime_photo_image_description">Crime scene photo (set)</string>
+	
+	<string name="crime_item_description">Crime "%1$s" happened on %2$s, %3$s</string>
+	<string name="not_solved">not solved yet</string>
+	<string name="solved">already solved</string>
+	
+	<string name="change_crime_date">Change crime date</string>
+	<string name="change_crime_time">Change crime time</string>
+	<string name="call_suspect">Call suspect</string>
+	<string name="choose_another_suspect_description">Suspect %1$s selected. Tap to choose another suspect</string>
+	<string name="share_the_crime">Share the crime</string>
+	
+	<string name="photo_was_changed_acc_announce">Photo was changed</string>
+	
 </resources>
